@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mitra Database System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Fira Code', monospace; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-900 text-indigo-100 min-h-screen p-4 md:p-10">
+
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="lg:col-span-1">
+            <div class="bg-slate-800 border border-indigo-500/30 p-6 rounded-lg shadow-lg shadow-indigo-500/10 sticky top-10">
+                <h1 class="text-2xl font-bold text-indigo-400 mb-2">> INPUT_DATA_MITRA_</h1>
+                <p class="text-xs text-slate-400 mb-6 border-b border-slate-700 pb-2">Masukkan data pelaku usaha baru.</p>
+
+                <form id="mitraForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-indigo-300 mb-1">Nama Usaha</label>
+                        <input type="text" id="namaUsaha" required placeholder="Cth: Percetakan Berkah" 
+                            class="w-full bg-slate-900 border border-slate-600 rounded p-2 focus:border-indigo-500 focus:outline-none text-white transition-colors">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-indigo-300 mb-1">Link Google Maps</label>
+                        <input type="url" id="linkMaps" required placeholder="https://maps.app.goo.gl/..." 
+                            class="w-full bg-slate-900 border border-slate-600 rounded p-2 focus:border-indigo-500 focus:outline-none text-white transition-colors">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-indigo-300 mb-1">Nomor WhatsApp (ID Unik)</label>
+                        <input type="text" id="noWa" required placeholder="08123456789" 
+                            class="w-full bg-slate-900 border border-slate-600 rounded p-2 focus:border-indigo-500 focus:outline-none text-white transition-colors">
+                        <p class="text-[10px] text-slate-500 mt-1">*Sistem akan menolak jika nomor sudah terdaftar.</p>
+                    </div>
+
+                    <button type="submit" id="btnSubmit" 
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded border border-indigo-400 mt-4 shadow-[0_0_10px_rgba(99,102,241,0.5)] transition-all">
+                        <span id="btnText">EXECUTE INSERT</span>
+                    </button>
+                </form>
+
+                <div id="statusBox" class="mt-4 p-3 rounded text-xs hidden"></div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2">
+            <div class="bg-slate-800 border border-indigo-500/30 p-6 rounded-lg min-h-[500px]">
+                <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-6 border-b border-slate-700 pb-4 gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-indigo-400">> DATABASE_VIEW</h2>
+                        <p class="text-xs text-slate-400">Menampilkan data yang telah tersimpan.</p>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-indigo-300 mb-1">FILTER TANGGAL:</label>
+                        <input type="date" id="filterDate" 
+                            class="bg-slate-900 border border-slate-600 rounded p-1 text-sm text-white focus:border-indigo-500 focus:outline-none">
+                        <button onclick="loadData()" class="text-xs text-indigo-400 hover:text-indigo-300 ml-2 underline">Refresh</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-900 text-indigo-400 font-mono text-xs uppercase">
+                            <tr>
+                                <th class="p-3 border-b border-slate-700">Tgl Input</th>
+                                <th class="p-3 border-b border-slate-700">Nama Usaha</th>
+                                <th class="p-3 border-b border-slate-700">WhatsApp</th>
+                                <th class="p-3 border-b border-slate-700 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="text-slate-300 divide-y divide-slate-700">
+                            <tr>
+                                <td colspan="4" class="p-4 text-center text-slate-500 animate-pulse">Initializing connection...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase dari CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, set, get, child, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        // --- KONFIGURASI FIREBASE ANDA ---
+        // Ganti dengan data dari Console Firebase Anda
+        const firebaseConfig = {
+        apiKey: "AIzaSyAGCiDwE1ccJUE1-jI8P1OvUtcuuTpqZHE",
+        authDomain: "data-mitra-42dee.firebaseapp.com",
+        projectId: "data-mitra-42dee",
+        storageBucket: "data-mitra-42dee.firebasestorage.app",
+        messagingSenderId: "411327733395",
+        appId: "1:411327733395:web:5f6cc5ef2d07bf15957766"
+
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // --- FUNGSI UTILITAS ---
+        
+        // Fungsi untuk membersihkan nomor WA agar jadi ID Unik
+        function sanitizePhoneNumber(phone) {
+            // Hapus semua karakter selain angka
+            let clean = phone.replace(/\D/g, ''); 
+            // Opsional: Standarisasi 62 (jika input 08xxx ubah ke 628xxx)
+            if (clean.startsWith('0')) {
+                clean = '62' + clean.substring(1);
+            }
+            return clean;
+        }
+
+        // Fungsi mendapatkan tanggal hari ini YYYY-MM-DD
+        function getTodayDate() {
+            const d = new Date();
+            return d.toISOString().split('T')[0];
+        }
+
+        // Fungsi menampilkan pesan status
+        function showStatus(msg, type) {
+            const box = document.getElementById('statusBox');
+            box.classList.remove('hidden', 'bg-red-900', 'text-red-200', 'bg-green-900', 'text-green-200');
+            
+            if(type === 'error') {
+                box.classList.add('bg-red-900', 'bg-opacity-50', 'text-red-300', 'border', 'border-red-500');
+                box.innerHTML = `[ERROR] ${msg}`;
+            } else {
+                box.classList.add('bg-green-900', 'bg-opacity-50', 'text-green-300', 'border', 'border-green-500');
+                box.innerHTML = `[SUCCESS] ${msg}`;
+            }
+            
+            box.classList.remove('hidden');
+            setTimeout(() => box.classList.add('hidden'), 5000);
+        }
+
+        // --- LOGIC UTAMA ---
+
+        // 1. Set default tanggal filter ke hari ini saat load
+        document.getElementById('filterDate').value = getTodayDate();
+
+        // 2. Handle Submit Form
+        document.getElementById('mitraForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('btnSubmit');
+            const btnText = document.getElementById('btnText');
+            
+            // Loading state
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            btnText.innerText = "PROCESSING...";
+
+            const nama = document.getElementById('namaUsaha').value;
+            const maps = document.getElementById('linkMaps').value;
+            const rawWa = document.getElementById('noWa').value;
+            const waId = sanitizePhoneNumber(rawWa); // ID Unik
+            const today = getTodayDate();
+
+            if(!waId) {
+                showStatus("Nomor WA tidak valid", 'error');
+                resetBtn();
+                return;
+            }
+
+            const dbRef = ref(db);
+
+            try {
+                // CEK DUPLIKASI: Cek apakah ID (no wa) ini sudah ada di database?
+                const snapshot = await get(child(dbRef, `mitra/${waId}`));
+
+                if (snapshot.exists()) {
+                    // Jika ada -> Warning!
+                    showStatus(`GAGAL: Data dengan No WA ${rawWa} sudah ada di database!`, 'error');
+                } else {
+                    // Jika tidak ada -> Simpan Data
+                    await set(ref(db, 'mitra/' + waId), {
+                        nama_usaha: nama,
+                        maps: maps,
+                        wa_display: rawWa,
+                        tanggal_input: today, // Untuk filtering
+                        timestamp: Date.now() // Timestamp presisi
+                    });
+                    
+                    showStatus("Data berhasil disimpan ke sistem.", 'success');
+                    document.getElementById('mitraForm').reset();
+                    loadData(); // Refresh tabel
+                }
+            } catch (error) {
+                console.error(error);
+                showStatus("Terjadi kesalahan koneksi.", 'error');
+            }
+
+            resetBtn();
+        });
+
+        function resetBtn() {
+            const btn = document.getElementById('btnSubmit');
+            const btnText = document.getElementById('btnText');
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            btnText.innerText = "EXECUTE INSERT";
+        }
+
+        // 3. Fungsi Load Data (Read)
+        window.loadData = async function() {
+            const tableBody = document.getElementById('tableBody');
+            const filterDate = document.getElementById('filterDate').value;
+            
+            tableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">Fetching data...</td></tr>`;
+
+            try {
+                const dbRef = ref(db, 'mitra');
+                // Mengambil semua data (idealnya menggunakan query, tapi untuk data kecil fetch all lebih mudah)
+                const snapshot = await get(dbRef);
+
+                tableBody.innerHTML = ''; // Kosongkan tabel
+
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    let hasData = false;
+
+                    // Loop data (Object to Array)
+                    Object.keys(data).forEach(key => {
+                        const item = data[key];
+
+                        // FILTER: Hanya tampilkan jika tanggal input sama dengan filter
+                        if (item.tanggal_input === filterDate) {
+                            hasData = true;
+                            const date = new Date(item.timestamp).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+                            
+                            const row = `
+                                <tr class="hover:bg-slate-800/50 transition-colors border-b border-slate-800">
+                                    <td class="p-3 font-mono text-xs text-indigo-300">${item.tanggal_input} <span class="text-slate-500">(${date})</span></td>
+                                    <td class="p-3 font-semibold">${item.nama_usaha}</td>
+                                    <td class="p-3 font-mono text-xs text-slate-400">${item.wa_display}</td>
+                                    <td class="p-3 text-center">
+                                        <a href="${item.maps}" target="_blank" class="inline-block text-indigo-400 hover:text-indigo-200 border border-indigo-500/50 px-2 py-1 rounded text-xs">
+                                            OPEN MAPS
+                                        </a>
+                                    </td>
+                                </tr>
+                            `;
+                            // Insert row di paling atas (terbaru)
+                            tableBody.insertAdjacentHTML('afterbegin', row);
+                        }
+                    });
+
+                    if (!hasData) {
+                        tableBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-500">Tidak ada data untuk tanggal ${filterDate}</td></tr>`;
+                    }
+
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-500">Database masih kosong.</td></tr>`;
+                }
+            } catch (error) {
+                console.error(error);
+                tableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-400">Gagal memuat data.</td></tr>`;
+            }
+        }
+
+        // Load data pertama kali saat filter tanggal berubah
+        document.getElementById('filterDate').addEventListener('change', loadData);
+        
+        // Initial load
+        loadData();
+
+    </script>
+</body>
+</html>
