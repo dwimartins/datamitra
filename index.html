@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mitra Database System v2.4</title>
+    <title>Mitra Database System v2.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -27,123 +27,120 @@
 <body class="bg-[conic-gradient(at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-indigo-950 to-slate-900 text-indigo-100 min-h-screen p-4 md:p-8">
 
     <!-- Header -->
-    <div class="max-w-[95%] mx-auto mb-6 flex justify-between items-center border-b border-indigo-500/30 pb-4">
+    <div class="max-w-[95%] mx-auto mb-4 flex justify-between items-center border-b border-indigo-500/30 pb-3">
         <div>
-            <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 tracking-tighter">
-                >> MITRA_DB_SYS <span class="text-xs text-indigo-500 border border-indigo-500 px-1 rounded ml-2">V2.4_STABLE</span>
+            <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 tracking-tighter">
+                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-indigo-500 border border-indigo-500 px-1 rounded ml-2">V2.5_COMPACT</span>
             </h1>
-            <p class="text-xs text-indigo-300/60 mt-1">Mass Data Injection & Verification Protocol</p>
+            <p class="text-[10px] text-indigo-300/60">Mass Data Injection & Verification Protocol</p>
         </div>
         <div class="text-right hidden md:block">
-            <div id="clock" class="text-xl font-bold text-indigo-400">00:00:00</div>
-            <div class="text-xs text-indigo-500">SYSTEM READY</div>
+            <div id="clock" class="text-lg font-bold text-indigo-400">00:00:00</div>
+            <div class="text-[10px] text-indigo-500">SYSTEM READY</div>
         </div>
     </div>
 
-    <!-- Layout Utama: Flex Column (Atas Bawah) -->
-    <div class="max-w-[95%] mx-auto flex flex-col gap-8 pb-10">
+    <!-- Layout Utama -->
+    <div class="max-w-[95%] mx-auto flex flex-col gap-6 pb-10">
         
         <!-- BAGIAN 1: FORM INPUT (FULL WIDTH) -->
         <div class="w-full">
-            <div class="glass p-6 rounded-2xl shadow-2xl shadow-indigo-900/20 relative overflow-hidden group">
+            <div class="glass p-5 rounded-xl shadow-2xl shadow-indigo-900/20 relative overflow-hidden group">
                 
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                        <span class="w-2 h-6 bg-indigo-500 rounded-full"></span> 
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                        <span class="w-1.5 h-4 bg-indigo-500 rounded-full"></span> 
                         BULK DATA ENTRY PANEL
                     </h2>
-                    <button id="clearBtn" class="text-xs text-red-400 hover:text-red-300 underline">Clear All Forms</button>
+                    <button id="clearBtn" class="text-[10px] text-red-400 hover:text-red-300 underline">Clear Forms</button>
                 </div>
 
-                <form id="mitraForm" class="space-y-6">
+                <form id="mitraForm" class="space-y-4">
                     
                     <!-- 1. INPUT LOKASI GLOBAL -->
-                    <div class="bg-indigo-900/30 p-4 rounded-xl border border-indigo-500/30">
-                        <label class="text-xs font-bold text-cyan-300 uppercase tracking-wider block mb-2">Set Lokasi Wilayah (Kecamatan/Kabupaten)</label>
+                    <div class="bg-indigo-900/30 p-3 rounded-lg border border-indigo-500/30">
+                        <label class="text-[10px] font-bold text-cyan-300 uppercase tracking-wider block mb-1">Set Lokasi Wilayah (Kecamatan/Kabupaten)</label>
                         <input type="text" id="generalLoc" required placeholder="Cth: Kec. Kutalimbaru, Deli Serdang" 
-                            class="w-full bg-slate-900 border border-indigo-500/50 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-cyan-400 placeholder-slate-600 transition-all">
-                        <p class="text-[10px] text-slate-400 mt-2">*Lokasi ini akan diterapkan ke SEMUA data yang diinput di bawah.</p>
+                            class="w-full bg-slate-900 border border-indigo-500/50 rounded p-2 text-xs text-white focus:outline-none focus:border-cyan-400 placeholder-slate-600 transition-all">
                     </div>
 
-                    <!-- 2. GRID UNTUK NAMA & WA (SEBELAHAN) -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Kolom Nama -->
-                        <div class="space-y-2">
-                            <label class="text-xs font-bold text-indigo-300 uppercase tracking-wider flex justify-between">
+                    <!-- 2. GRID UNTUK NAMA & WA -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-indigo-300 uppercase tracking-wider flex justify-between">
                                 <span>List Nama Usaha</span>
-                                <span class="text-[10px] text-slate-500">Count: <span id="countNama" class="text-white">0</span></span>
+                                <span class="text-slate-500">Count: <span id="countNama" class="text-white">0</span></span>
                             </label>
-                            <textarea id="bulkNama" rows="12" placeholder="Percetakan A&#10;Fotokopi B" 
-                                class="w-full bg-slate-900/80 border border-indigo-500/30 rounded-xl p-4 text-xs focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:outline-none text-cyan-50 resize-none whitespace-pre font-mono leading-relaxed"></textarea>
+                            <textarea id="bulkNama" rows="8" placeholder="Percetakan A&#10;Fotokopi B" 
+                                class="w-full bg-slate-900/80 border border-indigo-500/30 rounded-lg p-3 text-xs focus:border-indigo-400 focus:outline-none text-cyan-50 resize-none whitespace-pre font-mono"></textarea>
                         </div>
 
-                        <!-- Kolom WA -->
-                        <div class="space-y-2">
-                            <label class="text-xs font-bold text-indigo-300 uppercase tracking-wider flex justify-between">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-indigo-300 uppercase tracking-wider flex justify-between">
                                 <span>List No. WA</span>
-                                <span class="text-[10px] text-slate-500">Count: <span id="countWa" class="text-white">0</span></span>
+                                <span class="text-slate-500">Count: <span id="countWa" class="text-white">0</span></span>
                             </label>
-                            <textarea id="bulkWa" rows="12" placeholder="0812xxxx&#10;6285xxxx" 
-                                class="w-full bg-slate-900/80 border border-indigo-500/30 rounded-xl p-4 text-xs focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:outline-none text-emerald-50 resize-none whitespace-pre font-mono leading-relaxed"></textarea>
+                            <textarea id="bulkWa" rows="8" placeholder="0812xxxx&#10;6285xxxx" 
+                                class="w-full bg-slate-900/80 border border-indigo-500/30 rounded-lg p-3 text-xs focus:border-indigo-400 focus:outline-none text-emerald-50 resize-none whitespace-pre font-mono"></textarea>
                         </div>
                     </div>
 
-                    <!-- 3. INPUT MAPS (FULL WIDTH DI BAWAH) -->
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-indigo-300 uppercase tracking-wider flex justify-between">
+                    <!-- 3. INPUT MAPS -->
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-indigo-300 uppercase tracking-wider flex justify-between">
                             <span>List Link Maps</span>
-                            <span class="text-[10px] text-slate-500">Count: <span id="countMaps" class="text-white">0</span></span>
+                            <span class="text-slate-500">Count: <span id="countMaps" class="text-white">0</span></span>
                         </label>
-                        <textarea id="bulkMaps" rows="6" placeholder="https://maps...&#10;https://maps..." 
-                            class="w-full bg-slate-900/80 border border-indigo-500/30 rounded-xl p-4 text-xs focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:outline-none text-purple-50 resize-none whitespace-pre font-mono leading-relaxed"></textarea>
+                        <textarea id="bulkMaps" rows="4" placeholder="https://maps...&#10;https://maps..." 
+                            class="w-full bg-slate-900/80 border border-indigo-500/30 rounded-lg p-3 text-xs focus:border-indigo-400 focus:outline-none text-purple-50 resize-none whitespace-pre font-mono"></textarea>
                     </div>
 
                     <!-- Warning & Tombol -->
-                    <div class="flex flex-col md:flex-row gap-4 items-center">
-                        <div class="flex-1 w-full bg-yellow-900/10 border border-yellow-500/20 rounded-lg p-3">
-                            <p class="text-[11px] text-yellow-200/80">
+                    <div class="flex flex-col md:flex-row gap-3 items-center">
+                        <div class="flex-1 w-full bg-yellow-900/10 border border-yellow-500/20 rounded-lg p-2">
+                            <p class="text-[10px] text-yellow-200/80">
                                 ⚠️ <b>Rules:</b> Jumlah baris Nama, WA, dan Maps harus SAMA.
                             </p>
                         </div>
                         <button type="submit" id="btnSubmit" 
-                            class="flex-1 w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 p-4 text-white font-bold shadow-lg shadow-indigo-600/30 transition-all hover:scale-[1.01] hover:shadow-indigo-600/50 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span id="btnText" class="relative flex items-center justify-center gap-2 text-sm uppercase tracking-widest">
+                            class="flex-1 w-full group relative overflow-hidden rounded-lg bg-gradient-to-r from-indigo-600 to-cyan-600 p-2.5 text-white font-bold shadow-lg shadow-indigo-600/30 transition-all hover:scale-[1.01] hover:shadow-indigo-600/50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span id="btnText" class="relative flex items-center justify-center gap-2 text-xs uppercase tracking-widest">
                                 ROCKET LAUNCH INJECTION 🚀
                             </span>
                         </button>
                     </div>
                 </form>
 
-                <!-- Console Output -->
-                <div id="statusBox" class="mt-4 p-4 rounded-xl text-xs font-mono hidden max-h-40 overflow-y-auto border shadow-inner"></div>
+                <div id="statusBox" class="mt-3 p-3 rounded-lg text-[10px] font-mono hidden max-h-32 overflow-y-auto border shadow-inner"></div>
             </div>
         </div>
 
         <!-- BAGIAN 2: DATABASE VIEW (FULL WIDTH DI BAWAH) -->
         <div class="w-full">
-            <div class="glass p-6 rounded-2xl min-h-[500px] flex flex-col border border-indigo-500/20">
-                <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-6 gap-4">
+            <div class="glass p-5 rounded-xl min-h-[500px] flex flex-col border border-indigo-500/20">
+                <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-4 gap-4">
                     <div>
-                        <h2 class="text-xl font-bold text-white tracking-wide">DATABASE MONITOR</h2>
-                        <p class="text-xs text-indigo-300/60">Realtime data stream (Full View)</p>
+                        <h2 class="text-sm font-bold text-white tracking-wide">DATABASE MONITOR</h2>
+                        <p class="text-[10px] text-indigo-300/60">Realtime data stream (Compact Mode)</p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span class="text-[10px] text-indigo-300 uppercase font-bold">Filter Tanggal:</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-indigo-300 uppercase font-bold">Filter:</span>
                         <input type="date" id="filterDate" 
-                            class="bg-slate-900 border border-indigo-500/30 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-cyan-500 shadow-inner">
+                            class="bg-slate-900 border border-indigo-500/30 rounded p-1 text-xs text-white focus:outline-none focus:border-cyan-500 shadow-inner">
                     </div>
                 </div>
 
                 <!-- Table Wrapper -->
-                <div class="overflow-x-auto rounded-xl border border-indigo-500/20 bg-slate-900/50">
-                    <table class="w-full text-left text-sm">
+                <div class="overflow-x-auto rounded-lg border border-indigo-500/20 bg-slate-900/50">
+                    <table class="w-full text-left text-xs">
                         <thead class="bg-indigo-950/90 text-indigo-200 border-b border-indigo-500/30">
                             <tr>
-                                <th class="p-4 font-bold whitespace-nowrap">Waktu Input</th>
-                                <th class="p-4 font-bold">Lokasi Wilayah</th>
-                                <th class="p-4 font-bold">Nama Usaha</th>
-                                <th class="p-4 font-bold">No. WhatsApp</th>
-                                <th class="p-4 font-bold text-center">Aksi</th>
+                                <th class="p-2 font-bold w-10 text-center">No.</th>
+                                <th class="p-2 font-bold whitespace-nowrap">Waktu Input</th>
+                                <th class="p-2 font-bold">Lokasi Wilayah</th>
+                                <th class="p-2 font-bold">Nama Usaha</th>
+                                <th class="p-2 font-bold">No. WhatsApp</th>
+                                <th class="p-2 font-bold text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody" class="divide-y divide-indigo-500/10 text-slate-300">
@@ -152,9 +149,9 @@
                     </table>
                 </div>
                 
-                <div class="mt-4 flex justify-between items-center text-xs text-indigo-400 px-2">
+                <div class="mt-3 flex justify-between items-center text-[10px] text-indigo-400 px-1">
                     <span id="totalDataCount">Total Row: 0</span>
-                    <button onclick="loadData()" class="hover:text-white transition-colors bg-indigo-500/20 hover:bg-indigo-500/40 px-4 py-2 rounded-lg border border-indigo-500/30">↻ Refresh Table</button>
+                    <button onclick="loadData()" class="hover:text-white transition-colors bg-indigo-500/20 hover:bg-indigo-500/40 px-3 py-1 rounded border border-indigo-500/30">↻ Refresh</button>
                 </div>
             </div>
         </div>
@@ -317,7 +314,7 @@
             const tableBody = document.getElementById('tableBody');
             const filterDate = document.getElementById('filterDate').value;
             
-            tableBody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-indigo-400 animate-pulse tracking-widest">SCANNING DATABASE...</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-indigo-400 animate-pulse tracking-widest">SCANNING DATABASE...</td></tr>`;
 
             try {
                 const dbRef = ref(db, 'mitra');
@@ -334,32 +331,33 @@
                         if (item.tanggal_input === filterDate) {
                             count++;
                             
-                            // FORMAT TANGGAL YANG LEBIH JELAS
+                            // FORMAT TANGGAL YANG LEBIH KOMPAK: 30 Jan 2026 (14:32)
                             const dateObj = new Date(item.timestamp);
                             const dateStr = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
                             const timeStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                            const compactDateTime = `${dateStr} <span class="text-slate-500">(${timeStr})</span>`;
                             
-                            const lokasiLabel = item.lokasi_wilayah ? item.lokasi_wilayah : '<span class="text-slate-600 opacity-50">-</span>';
+                            const lokasiLabel = item.lokasi_wilayah ? item.lokasi_wilayah : '-';
 
                             const row = `
-                                <tr class="hover:bg-indigo-600/10 transition-colors border-b border-indigo-500/10 group odd:bg-indigo-500/5">
-                                    <td class="p-4 font-mono text-xs text-indigo-300 align-middle">
-                                        <div class="font-bold text-white mb-1">${dateStr}</div>
-                                        <div class="text-[10px] text-slate-500">${timeStr} WIB</div>
+                                <tr class="hover:bg-indigo-600/10 transition-colors border-b border-indigo-500/10 group odd:bg-indigo-500/5 leading-tight">
+                                    <td class="p-2 text-center text-slate-500 font-mono text-[10px] align-middle">${count}</td>
+                                    <td class="p-2 font-mono text-[11px] text-indigo-300 align-middle whitespace-nowrap">
+                                        ${compactDateTime}
                                     </td>
-                                    <td class="p-4 align-middle">
-                                        <div class="text-xs text-cyan-200 font-semibold tracking-wide">${lokasiLabel}</div>
+                                    <td class="p-2 align-middle">
+                                        <div class="text-[11px] text-cyan-200 font-semibold truncate max-w-[150px]" title="${lokasiLabel}">${lokasiLabel}</div>
                                     </td>
-                                    <td class="p-4 align-middle">
-                                        <div class="font-bold text-white text-sm">${item.nama_usaha}</div>
+                                    <td class="p-2 align-middle">
+                                        <div class="font-bold text-white text-[11px] truncate max-w-[200px]" title="${item.nama_usaha}">${item.nama_usaha}</div>
                                     </td>
-                                    <td class="p-4 align-middle">
-                                        <span class="font-mono text-xs text-emerald-400 bg-emerald-900/30 px-2 py-1 rounded border border-emerald-500/20 whitespace-nowrap">
+                                    <td class="p-2 align-middle">
+                                        <span class="font-mono text-[10px] text-emerald-400 bg-emerald-900/30 px-1.5 py-0.5 rounded border border-emerald-500/20 whitespace-nowrap">
                                             ${item.wa_display}
                                         </span>
                                     </td>
-                                    <td class="p-4 text-center align-middle">
-                                        <a href="${item.maps}" target="_blank" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-indigo-500/20 hover:bg-indigo-500 text-indigo-300 hover:text-white transition-all border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.2)]">
+                                    <td class="p-2 text-center align-middle">
+                                        <a href="${item.maps}" target="_blank" class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-500/20 hover:bg-indigo-500 text-indigo-300 hover:text-white transition-all border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.2)]">
                                             ➤
                                         </a>
                                     </td>
@@ -372,15 +370,15 @@
                     document.getElementById('totalDataCount').innerText = `Total Row: ${count}`;
 
                     if (count === 0) {
-                        tableBody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-500 text-sm italic">Tidak ada data untuk tanggal ${filterDate}</td></tr>`;
+                        tableBody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500 text-xs italic">Tidak ada data untuk tanggal ${filterDate}</td></tr>`;
                     }
 
                 } else {
-                    tableBody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-500 italic">Database Kosong. Silakan input data.</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500 text-xs italic">Database Kosong. Silakan input data.</td></tr>`;
                 }
             } catch (error) {
                 console.error(error);
-                tableBody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-red-400 bg-red-900/10 border border-red-500/20 rounded-lg m-4">Connection Failed. Check Console.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-400 bg-red-900/10 border border-red-500/20 rounded-lg m-4">Connection Failed. Check Console.</td></tr>`;
             }
         }
 
