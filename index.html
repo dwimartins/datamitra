@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mitra Database System v3.0</title>
+    <title>Mitra Database System v3.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -15,7 +15,6 @@
         ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
 
-        /* Glassmorphism Utilities */
         .glass {
             background: rgba(30, 41, 59, 0.7);
             backdrop-filter: blur(10px);
@@ -23,13 +22,11 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-
         .row-used { opacity: 0.5; filter: grayscale(100%); background: rgba(0,0,0,0.3); }
         .row-new { background: rgba(16, 185, 129, 0.05); }
 
-        /* --- SMART SELECTION MAGIC --- */
+        /* --- EXCEL SELECTION TRICK --- */
+        /* Kita matikan seleksi di kolom yang tidak perlu */
         .no-select {
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -37,9 +34,17 @@
             user-select: none;
             cursor: default;
         }
+        
+        /* Pastikan kolom Nama dan WA bisa diseleksi */
         .selectable {
             user-select: text;
             cursor: text;
+        }
+
+        /* Saat baris dipilih, beri highlight agar user tau */
+        tr::selection, td::selection, div::selection {
+            background: rgba(99, 102, 241, 0.5); /* Warna blok biru */
+            color: white;
         }
     </style>
 </head>
@@ -49,7 +54,7 @@
     <div class="max-w-[95%] mx-auto mb-4 flex justify-between items-center border-b border-indigo-500/30 pb-3">
         <div>
             <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 tracking-tighter">
-                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-indigo-500 border border-indigo-500 px-1 rounded ml-2">V3.0_COPY_FIX</span>
+                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V3.1_EXCEL_PERFECT</span>
             </h1>
             <p class="text-[10px] text-indigo-300/60">Mass Data Injection & Verification Protocol</p>
         </div>
@@ -122,17 +127,21 @@
                     </div>
                 </div>
 
+                <!-- TABLE WRAPPER -->
                 <div class="overflow-x-auto rounded-lg border border-indigo-500/20 bg-slate-900/50">
                     <table class="w-full text-left text-xs" id="dataTable">
                         <thead class="bg-indigo-950/90 text-indigo-200 border-b border-indigo-500/30">
                             <tr>
+                                <!-- Kolom yang TIDAK BISA diblok (no-select) -->
                                 <th class="p-2 font-bold w-10 text-center no-select">No.</th>
                                 <th class="p-2 font-bold text-center w-10 no-select">Sts</th>
                                 <th class="p-2 font-bold whitespace-nowrap no-select">Waktu</th>
                                 <th class="p-2 font-bold no-select">Lokasi</th>
-                                <!-- Kolom Selectable -->
-                                <th class="p-2 font-bold selectable">Nama Usaha</th>
-                                <th class="p-2 font-bold selectable">Kontak</th>
+                                
+                                <!-- Kolom yang BISA diblok (selectable) -->
+                                <th class="p-2 font-bold selectable text-indigo-300 border-l border-indigo-500/10">Nama Usaha</th>
+                                <th class="p-2 font-bold selectable text-indigo-300 border-r border-indigo-500/10">Kontak</th>
+                                
                                 <th class="p-2 font-bold text-center w-32 no-select">Aksi</th>
                             </tr>
                         </thead>
@@ -148,7 +157,7 @@
         </div>
     </div>
 
-    <!-- MODAL EDIT -->
+    <!-- MODAL EDIT (Disembunyikan) -->
     <div id="editModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="glass p-6 rounded-2xl w-full max-w-md modal-enter border border-indigo-500/40 shadow-[0_0_50px_rgba(79,70,229,0.3)]">
             <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">✏️ EDIT DATA MITRA</h3>
@@ -224,23 +233,56 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        // --- COPY INTERCEPTOR (MAGIC FIX) ---
-        // Ini adalah kunci agar saat dicopy ke Excel hasilnya Plain Text dan Rapi
+        // ========================================================
+        // ⚡ THE MAGIC COPY INTERCEPTOR (V3.1 FIX) ⚡
+        // Script ini mencegat saat Anda tekan Ctrl+C di tabel
+        // ========================================================
         document.addEventListener('copy', function(e) {
+            // 1. Cek apakah seleksi ada di dalam tabel kita
             const selection = window.getSelection();
-            // Hanya jalankan jika user sedang menyeleksi sesuatu di dalam tabel
-            if (selection.rangeCount > 0) {
-                const node = selection.anchorNode;
-                // Cek apakah node yang diseleksi ada di dalam tabel data
-                if (node && (node.nodeType === 3 ? node.parentNode : node).closest('#dataTable')) {
-                    e.preventDefault(); // Mencegah copy bawaan browser (yang bawa HTML/Warna)
+            if (selection.rangeCount === 0) return;
+            
+            const node = selection.anchorNode;
+            const insideTable = (node.nodeType === 3 ? node.parentNode : node).closest('#dataTable');
+            
+            if (!insideTable) return; // Jika copy di luar tabel, biarkan normal
+
+            // 2. Cegah copy bawaan browser (karena bawa format HTML dan style)
+            e.preventDefault();
+
+            // 3. Ambil semua baris (TR) yang sedang diblok/diseleksi oleh user
+            const rows = document.querySelectorAll('#tableBody tr');
+            let clipboardText = "";
+            let rowsCopied = 0;
+
+            rows.forEach(row => {
+                // Cek apakah baris ini termasuk dalam seleksi user (highlighted)
+                if (selection.containsNode(row, true)) {
                     
-                    // Ambil teks murni, hilangkan spasi berlebih
-                    let text = selection.toString();
+                    // Ambil data bersih dari class khusus
+                    const nameCell = row.querySelector('.col-name');
+                    const waCell = row.querySelector('.col-wa');
                     
-                    // Paksa Clipboard menyimpan sebagai Plain Text
-                    e.clipboardData.setData('text/plain', text);
+                    if(nameCell && waCell) {
+                        const name = nameCell.innerText.trim();
+                        const wa = waCell.innerText.trim();
+                        
+                        // FORMAT EXCEL: Nama [TAB] 'NomorWA [ENTER]
+                        // Tanda petik ' di depan nomor WA memaksa Excel membacanya sebagai TEXT (bukan Scientific E+)
+                        clipboardText += `${name}\t'${wa}\n`;
+                        rowsCopied++;
+                    }
                 }
+            });
+
+            // 4. Masukkan data bersih ke clipboard
+            if (clipboardText) {
+                e.clipboardData.setData('text/plain', clipboardText);
+                // Feedback visual kecil
+                const btn = document.getElementById('totalDataCount');
+                const oldText = btn.innerText;
+                btn.innerText = `✅ Copied ${rowsCopied} rows for Excel!`;
+                setTimeout(() => btn.innerText = oldText, 2000);
             }
         });
 
@@ -424,8 +466,22 @@
                             const rowClass = isUsed ? 'row-used' : 'row-new';
                             const statusBtnClass = isUsed ? 'bg-slate-700 text-slate-400' : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white';
                             
-                            // HTML MINIFIED UNTUK MENCEGAH WHITESPACE DI EXCEL
-                            const row = `<tr class="${rowClass} hover:bg-indigo-600/10 transition-colors border-b border-indigo-500/10 group leading-tight"><td class="p-2 text-center text-slate-500 font-mono text-[10px] align-middle no-select">${count}</td><td class="p-2 text-center align-middle no-select"><button onclick="toggleStatus('${sanitizePhoneNumber(item.wa_display)}','${item.status||'new'}')" class="w-6 h-6 rounded flex items-center justify-center transition-all ${statusBtnClass}" title="${isUsed?'Batal':'Pakai'}">${isUsed?'↩':'✓'}</button></td><td class="p-2 font-mono text-[10px] text-indigo-300 align-middle whitespace-nowrap no-select">${compactDateTime}</td><td class="p-2 align-middle no-select"><div class="text-[10px] text-cyan-200 font-semibold truncate max-w-[100px]" title="${lokasiLabel}">${lokasiLabel}</div></td><td class="p-2 align-middle selectable text-white font-bold text-[11px] truncate max-w-[150px]" title="${item.nama_usaha}">${item.nama_usaha}</td><td class="p-2 align-middle selectable font-mono text-[10px] text-emerald-400 whitespace-nowrap">${item.wa_display}</td><td class="p-2 text-center align-middle flex justify-center gap-2 no-select"><a href="${item.maps}" target="_blank" title="Maps" class="w-6 h-6 flex items-center justify-center rounded bg-indigo-500/20 text-indigo-300 hover:text-white hover:bg-indigo-500 transition-all">➤</a><button onclick="openEditModal('${sanitizePhoneNumber(item.wa_display)}')" title="Edit" class="w-6 h-6 flex items-center justify-center rounded bg-yellow-500/20 text-yellow-300 hover:text-white hover:bg-yellow-500 transition-all">✎</button><button onclick="deleteItem('${sanitizePhoneNumber(item.wa_display)}')" title="Hapus" class="w-6 h-6 flex items-center justify-center rounded bg-red-500/20 text-red-300 hover:text-white hover:bg-red-500 transition-all">🗑</button></td></tr>`;
+                            // HTML STRUKTUR YANG DISEDERHANAKAN (FLAT)
+                            // Class 'col-name' dan 'col-wa' digunakan oleh script copy interceptor
+                            const row = `
+                                <tr class="${rowClass} hover:bg-indigo-600/10 transition-colors border-b border-indigo-500/10 group leading-tight">
+                                    <td class="p-2 text-center text-slate-500 font-mono text-[10px] align-middle no-select">${count}</td>
+                                    <td class="p-2 text-center align-middle no-select"><button onclick="toggleStatus('${sanitizePhoneNumber(item.wa_display)}','${item.status||'new'}')" class="w-6 h-6 rounded flex items-center justify-center transition-all ${statusBtnClass}" title="${isUsed?'Batal':'Pakai'}">${isUsed?'↩':'✓'}</button></td>
+                                    <td class="p-2 font-mono text-[10px] text-indigo-300 align-middle whitespace-nowrap no-select">${compactDateTime}</td>
+                                    <td class="p-2 align-middle no-select"><div class="text-[10px] text-cyan-200 font-semibold truncate max-w-[100px]" title="${lokasiLabel}">${lokasiLabel}</div></td>
+                                    
+                                    <!-- KOLOM UTAMA (DIBERI CLASS KHUSUS) -->
+                                    <td class="p-2 align-middle selectable col-name text-white font-bold text-[11px] truncate max-w-[150px] border-l border-indigo-500/10" title="${item.nama_usaha}">${item.nama_usaha}</td>
+                                    <td class="p-2 align-middle selectable col-wa font-mono text-[10px] text-emerald-400 whitespace-nowrap border-r border-indigo-500/10">${item.wa_display}</td>
+                                    
+                                    <td class="p-2 text-center align-middle flex justify-center gap-2 no-select"><a href="${item.maps}" target="_blank" title="Maps" class="w-6 h-6 flex items-center justify-center rounded bg-indigo-500/20 text-indigo-300 hover:text-white hover:bg-indigo-500 transition-all">➤</a><button onclick="openEditModal('${sanitizePhoneNumber(item.wa_display)}')" title="Edit" class="w-6 h-6 flex items-center justify-center rounded bg-yellow-500/20 text-yellow-300 hover:text-white hover:bg-yellow-500 transition-all">✎</button><button onclick="deleteItem('${sanitizePhoneNumber(item.wa_display)}')" title="Hapus" class="w-6 h-6 flex items-center justify-center rounded bg-red-500/20 text-red-300 hover:text-white hover:bg-red-500 transition-all">🗑</button></td>
+                                </tr>
+                            `;
                             tableBody.insertAdjacentHTML('beforeend', row);
                         }
                     });
