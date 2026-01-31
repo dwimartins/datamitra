@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mitra Database System v2.9</title>
+    <title>Mitra Database System v3.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -23,25 +23,20 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Modal Animation */
         .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-        /* Status Styles */
         .row-used { opacity: 0.5; filter: grayscale(100%); background: rgba(0,0,0,0.3); }
         .row-new { background: rgba(16, 185, 129, 0.05); }
 
         /* --- SMART SELECTION MAGIC --- */
-        /* Kelas ini membuat teks TIDAK BISA diblok/dicopy */
         .no-select {
-            -webkit-user-select: none; /* Safari */
-            -moz-user-select: none;    /* Firefox */
-            -ms-user-select: none;     /* IE10+/Edge */
-            user-select: none;         /* Standard */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
             cursor: default;
         }
-        
-        /* Kelas ini memastikan teks BISA diblok */
         .selectable {
             user-select: text;
             cursor: text;
@@ -54,7 +49,7 @@
     <div class="max-w-[95%] mx-auto mb-4 flex justify-between items-center border-b border-indigo-500/30 pb-3">
         <div>
             <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 tracking-tighter">
-                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-indigo-500 border border-indigo-500 px-1 rounded ml-2">V2.9_SMART_SELECT</span>
+                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-indigo-500 border border-indigo-500 px-1 rounded ml-2">V3.0_COPY_FIX</span>
             </h1>
             <p class="text-[10px] text-indigo-300/60">Mass Data Injection & Verification Protocol</p>
         </div>
@@ -69,8 +64,6 @@
         
         <!-- BAGIAN 1: FORM INPUT -->
         <div class="w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <!-- FORM INPUT (2/3 Layar) -->
             <div class="lg:col-span-2 glass p-5 rounded-xl shadow-2xl shadow-indigo-900/20 relative overflow-hidden group">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-sm font-bold text-white flex items-center gap-2">
@@ -81,13 +74,10 @@
                 </div>
 
                 <form id="mitraForm" class="space-y-4">
-                    <!-- Lokasi Global -->
                     <div class="bg-indigo-900/30 p-2 rounded-lg border border-indigo-500/30">
                         <input type="text" id="generalLoc" required placeholder="Lokasi Wilayah (Kec/Kab) untuk data ini..." 
                             class="w-full bg-slate-900 border border-indigo-500/50 rounded p-2 text-xs text-white focus:outline-none focus:border-cyan-400 placeholder-slate-600 transition-all">
                     </div>
-
-                    <!-- SMART PASTE AREA -->
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold text-indigo-300 uppercase flex justify-between">
                             <span>PASTE DATA DARI EXCEL (NAMA & WA)</span> 
@@ -96,15 +86,12 @@
                         <textarea id="smartRawData" rows="8" placeholder="Paste data Nama dan WA di sini..." 
                             class="w-full bg-slate-900/80 border border-indigo-500/30 rounded-lg p-3 text-xs focus:border-indigo-400 focus:outline-none text-emerald-50 resize-none whitespace-pre font-mono leading-relaxed placeholder-slate-600"></textarea>
                     </div>
-
-                    <!-- Maps (Optional) -->
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold text-indigo-300 uppercase flex justify-between">
                             <span>Link Maps (Opsional)</span> <span class="text-slate-500">Lines: <span id="countMaps" class="text-white">0</span></span>
                         </label>
                         <textarea id="bulkMaps" rows="3" placeholder="https://maps..." class="w-full bg-slate-900/80 border border-indigo-500/30 rounded-lg p-3 text-xs focus:border-indigo-400 focus:outline-none text-purple-50 resize-none whitespace-pre font-mono"></textarea>
                     </div>
-
                     <button type="submit" id="btnSubmit" class="w-full group relative overflow-hidden rounded-lg bg-gradient-to-r from-indigo-600 to-cyan-600 p-2.5 text-white font-bold shadow-lg shadow-indigo-600/30 transition-all hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed">
                         <span id="btnText" class="text-xs uppercase tracking-widest">INJECT DATA 🚀</span>
                     </button>
@@ -112,7 +99,6 @@
                 <div id="statusBox" class="mt-3 p-3 rounded-lg text-[10px] font-mono hidden max-h-32 overflow-y-auto border shadow-inner"></div>
             </div>
 
-            <!-- BATCH MANAGER (1/3 Layar) -->
             <div class="lg:col-span-1 glass p-5 rounded-xl border border-indigo-500/20 flex flex-col h-full">
                 <h2 class="text-sm font-bold text-white mb-3 border-b border-indigo-500/30 pb-2">BATCH HISTORY (Today)</h2>
                 <div class="flex-grow overflow-y-auto pr-1" id="batchListContainer">
@@ -129,7 +115,6 @@
                         <h2 class="text-sm font-bold text-white tracking-wide">DATABASE MONITOR</h2>
                         <p class="text-[10px] text-indigo-300/60" id="viewModeText">Menampilkan data 3 hari terakhir</p>
                     </div>
-                    
                     <div class="flex flex-wrap items-center gap-2 justify-end">
                         <span class="text-[10px] text-indigo-300 uppercase font-bold">Filter:</span>
                         <input type="date" id="filterDate" class="bg-slate-900 border border-indigo-500/30 rounded p-1 text-xs text-white focus:outline-none focus:border-cyan-500 shadow-inner">
@@ -138,18 +123,16 @@
                 </div>
 
                 <div class="overflow-x-auto rounded-lg border border-indigo-500/20 bg-slate-900/50">
-                    <table class="w-full text-left text-xs">
+                    <table class="w-full text-left text-xs" id="dataTable">
                         <thead class="bg-indigo-950/90 text-indigo-200 border-b border-indigo-500/30">
                             <tr>
-                                <!-- Kolom yang TIDAK BISA diblok diberi class no-select -->
                                 <th class="p-2 font-bold w-10 text-center no-select">No.</th>
                                 <th class="p-2 font-bold text-center w-10 no-select">Sts</th>
                                 <th class="p-2 font-bold whitespace-nowrap no-select">Waktu</th>
                                 <th class="p-2 font-bold no-select">Lokasi</th>
-                                <!-- Kolom yang BISA diblok -->
+                                <!-- Kolom Selectable -->
                                 <th class="p-2 font-bold selectable">Nama Usaha</th>
                                 <th class="p-2 font-bold selectable">Kontak</th>
-                                <!-- Kolom yang TIDAK BISA diblok -->
                                 <th class="p-2 font-bold text-center w-32 no-select">Aksi</th>
                             </tr>
                         </thead>
@@ -191,7 +174,6 @@
         </div>
     </div>
 
-    <!-- FIREBASE LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, set, get, child, remove, update } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
@@ -217,7 +199,6 @@
         function getTodayDate() { return new Date().toISOString().split('T')[0]; }
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID'); }, 1000);
 
-        // Counter Logic
         document.getElementById('smartRawData').addEventListener('input', function() {
             const count = this.value.split('\n').filter(line => line.trim() !== '').length;
             document.getElementById('countRaw').innerText = count;
@@ -243,8 +224,27 @@
             box.scrollTop = box.scrollHeight;
         }
 
+        // --- COPY INTERCEPTOR (MAGIC FIX) ---
+        // Ini adalah kunci agar saat dicopy ke Excel hasilnya Plain Text dan Rapi
+        document.addEventListener('copy', function(e) {
+            const selection = window.getSelection();
+            // Hanya jalankan jika user sedang menyeleksi sesuatu di dalam tabel
+            if (selection.rangeCount > 0) {
+                const node = selection.anchorNode;
+                // Cek apakah node yang diseleksi ada di dalam tabel data
+                if (node && (node.nodeType === 3 ? node.parentNode : node).closest('#dataTable')) {
+                    e.preventDefault(); // Mencegah copy bawaan browser (yang bawa HTML/Warna)
+                    
+                    // Ambil teks murni, hilangkan spasi berlebih
+                    let text = selection.toString();
+                    
+                    // Paksa Clipboard menyimpan sebagai Plain Text
+                    e.clipboardData.setData('text/plain', text);
+                }
+            }
+        });
+
         // --- GLOBAL FUNCTIONS ---
-        
         window.deleteItem = async (id) => {
             if(confirm('Yakin hapus data ini?')) {
                 try { await remove(ref(db, 'mitra/' + id)); loadData(); } catch(e) { alert('Gagal hapus: ' + e.message); }
@@ -253,10 +253,7 @@
 
         window.toggleStatus = async (id, currentStatus) => {
             const newStatus = (currentStatus === 'used') ? 'new' : 'used';
-            try {
-                await update(ref(db, 'mitra/' + id), { status: newStatus });
-                loadData(); 
-            } catch(e) { alert('Gagal update status: ' + e.message); }
+            try { await update(ref(db, 'mitra/' + id), { status: newStatus }); loadData(); } catch(e) { alert('Gagal update status'); }
         };
 
         window.openEditModal = async (id) => {
@@ -289,10 +286,7 @@
             }
         };
 
-        window.resetTo3Days = () => {
-            document.getElementById('filterDate').value = '';
-            loadData();
-        };
+        window.resetTo3Days = () => { document.getElementById('filterDate').value = ''; loadData(); };
 
         document.getElementById('closeModal').addEventListener('click', () => document.getElementById('editModal').classList.add('hidden'));
         document.getElementById('editForm').addEventListener('submit', async (e) => {
@@ -311,7 +305,6 @@
 
         document.getElementById('mitraForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const btn = document.getElementById('btnSubmit');
             const box = document.getElementById('statusBox');
             const loc = document.getElementById('generalLoc').value.trim(); 
@@ -332,8 +325,6 @@
             let successCount = 0;
             let skipCount = 0;
             const dbRef = ref(db);
-
-            logStatus(`Mendeteksi ${rawLines.length} baris data...`, 'info');
 
             for (let i = 0; i < rawLines.length; i++) {
                 let parts = rawLines[i].split('\t');
@@ -409,7 +400,6 @@
 
                     sortedData.forEach(item => {
                         let showItem = false;
-
                         if (filterDate) {
                             viewModeText.innerText = `Menampilkan data tanggal: ${filterDate}`;
                             if (item.tanggal_input === filterDate) showItem = true;
@@ -430,39 +420,12 @@
                             const dateObj = new Date(item.timestamp);
                             const compactDateTime = `${dateObj.getDate()} ${dateObj.toLocaleString('default', { month: 'short' })} (${dateObj.getHours()}:${dateObj.getMinutes().toString().padStart(2,'0')})`;
                             const lokasiLabel = item.lokasi_wilayah ? item.lokasi_wilayah : '-';
-                            
                             const isUsed = item.status === 'used';
                             const rowClass = isUsed ? 'row-used' : 'row-new';
                             const statusBtnClass = isUsed ? 'bg-slate-700 text-slate-400' : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white';
-                            const statusBtnTitle = isUsed ? 'Tandai Belum Dipakai' : 'Tandai Sudah Dipakai';
-
-                            const row = `
-                                <tr class="${rowClass} hover:bg-indigo-600/10 transition-colors border-b border-indigo-500/10 group leading-tight">
-                                    <!-- KOLOM YANG TIDAK BISA DIBLOK (no-select) -->
-                                    <td class="p-2 text-center text-slate-500 font-mono text-[10px] align-middle no-select">${count}</td>
-                                    
-                                    <td class="p-2 text-center align-middle no-select">
-                                        <button onclick="toggleStatus('${sanitizePhoneNumber(item.wa_display)}', '${item.status || 'new'}')" 
-                                            class="w-6 h-6 rounded flex items-center justify-center transition-all ${statusBtnClass}" title="${statusBtnTitle}">
-                                            ${isUsed ? '↩' : '✓'}
-                                        </button>
-                                    </td>
-
-                                    <td class="p-2 font-mono text-[10px] text-indigo-300 align-middle whitespace-nowrap no-select">${compactDateTime}</td>
-                                    <td class="p-2 align-middle no-select"><div class="text-[10px] text-cyan-200 font-semibold truncate max-w-[100px]" title="${lokasiLabel}">${lokasiLabel}</div></td>
-                                    
-                                    <!-- KOLOM YANG BISA DIBLOK (selectable) -->
-                                    <td class="p-2 align-middle selectable"><div class="font-bold text-white text-[11px] truncate max-w-[150px]" title="${item.nama_usaha}">${item.nama_usaha}</div></td>
-                                    <td class="p-2 align-middle selectable"><span class="font-mono text-[10px] text-emerald-400 bg-emerald-900/30 px-1.5 py-0.5 rounded border border-emerald-500/20 whitespace-nowrap">${item.wa_display}</span></td>
-                                    
-                                    <!-- KOLOM YANG TIDAK BISA DIBLOK (no-select) -->
-                                    <td class="p-2 text-center align-middle flex justify-center gap-2 no-select">
-                                        <a href="${item.maps}" target="_blank" title="Maps" class="w-6 h-6 flex items-center justify-center rounded bg-indigo-500/20 text-indigo-300 hover:text-white hover:bg-indigo-500 transition-all">➤</a>
-                                        <button onclick="openEditModal('${sanitizePhoneNumber(item.wa_display)}')" title="Edit" class="w-6 h-6 flex items-center justify-center rounded bg-yellow-500/20 text-yellow-300 hover:text-white hover:bg-yellow-500 transition-all">✎</button>
-                                        <button onclick="deleteItem('${sanitizePhoneNumber(item.wa_display)}')" title="Hapus" class="w-6 h-6 flex items-center justify-center rounded bg-red-500/20 text-red-300 hover:text-white hover:bg-red-500 transition-all">🗑</button>
-                                    </td>
-                                </tr>
-                            `;
+                            
+                            // HTML MINIFIED UNTUK MENCEGAH WHITESPACE DI EXCEL
+                            const row = `<tr class="${rowClass} hover:bg-indigo-600/10 transition-colors border-b border-indigo-500/10 group leading-tight"><td class="p-2 text-center text-slate-500 font-mono text-[10px] align-middle no-select">${count}</td><td class="p-2 text-center align-middle no-select"><button onclick="toggleStatus('${sanitizePhoneNumber(item.wa_display)}','${item.status||'new'}')" class="w-6 h-6 rounded flex items-center justify-center transition-all ${statusBtnClass}" title="${isUsed?'Batal':'Pakai'}">${isUsed?'↩':'✓'}</button></td><td class="p-2 font-mono text-[10px] text-indigo-300 align-middle whitespace-nowrap no-select">${compactDateTime}</td><td class="p-2 align-middle no-select"><div class="text-[10px] text-cyan-200 font-semibold truncate max-w-[100px]" title="${lokasiLabel}">${lokasiLabel}</div></td><td class="p-2 align-middle selectable text-white font-bold text-[11px] truncate max-w-[150px]" title="${item.nama_usaha}">${item.nama_usaha}</td><td class="p-2 align-middle selectable font-mono text-[10px] text-emerald-400 whitespace-nowrap">${item.wa_display}</td><td class="p-2 text-center align-middle flex justify-center gap-2 no-select"><a href="${item.maps}" target="_blank" title="Maps" class="w-6 h-6 flex items-center justify-center rounded bg-indigo-500/20 text-indigo-300 hover:text-white hover:bg-indigo-500 transition-all">➤</a><button onclick="openEditModal('${sanitizePhoneNumber(item.wa_display)}')" title="Edit" class="w-6 h-6 flex items-center justify-center rounded bg-yellow-500/20 text-yellow-300 hover:text-white hover:bg-yellow-500 transition-all">✎</button><button onclick="deleteItem('${sanitizePhoneNumber(item.wa_display)}')" title="Hapus" class="w-6 h-6 flex items-center justify-center rounded bg-red-500/20 text-red-300 hover:text-white hover:bg-red-500 transition-all">🗑</button></td></tr>`;
                             tableBody.insertAdjacentHTML('beforeend', row);
                         }
                     });
