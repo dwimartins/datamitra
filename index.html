@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mitra Database System v3.4</title>
+    <title>Mitra Database System v3.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -27,40 +27,45 @@
 
         .row-used { opacity: 0.5; filter: grayscale(100%); background: rgba(0,0,0,0.3); }
         .row-new { background: rgba(16, 185, 129, 0.05); }
+        .row-selected { background: rgba(99, 102, 241, 0.2) !important; border-left: 2px solid #6366f1; }
 
         /* --- EXCEL SELECTION HELPER --- */
-        .no-select {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            cursor: default;
-        }
+        .no-select { user-select: none; cursor: default; }
+        .selectable { user-select: text; cursor: text; }
+        ::selection { background: rgba(99, 102, 241, 0.5); color: white; }
         
-        .selectable {
-            user-select: text;
-            cursor: text;
-        }
-
-        ::selection {
-            background: rgba(99, 102, 241, 0.5);
-            color: white;
+        /* Checkbox Custom */
+        input[type="checkbox"] {
+            accent-color: #4f46e5;
+            cursor: pointer;
+            width: 14px;
+            height: 14px;
         }
     </style>
 </head>
 <body class="bg-[conic-gradient(at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-indigo-950 to-slate-900 text-indigo-100 min-h-screen p-4 md:p-8">
 
-    <!-- FLOATING SELECTION COUNTER (BARU) -->
-    <div id="selectionCounter" class="fixed bottom-6 right-6 bg-indigo-600 text-white px-4 py-3 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.5)] font-bold text-sm hidden z-50 flex items-center gap-3 border border-indigo-400/50 transition-all transform hover:scale-105">
-        <span class="bg-white text-indigo-600 px-2 py-0.5 rounded text-xs font-mono" id="selCountVal">0</span>
-        <span>BARIS TERPILIH</span>
+    <!-- FLOATING ACTION BAR (REVISI) -->
+    <div id="selectionActionBar" class="fixed bottom-6 right-6 bg-slate-800 text-white p-2 rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-indigo-500/50 hidden z-50 flex flex-col gap-2 min-w-[200px] transition-all transform translate-y-2">
+        <div class="flex items-center justify-between px-2 pb-2 border-b border-white/10">
+            <span class="text-xs font-bold text-indigo-300">TERPILIH: <span id="selCountVal" class="text-white text-lg ml-1">0</span></span>
+            <button onclick="clearSelection()" class="text-[10px] text-slate-400 hover:text-white">Batal</button>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="bulkDelete()" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 px-3 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1">
+                🗑 HAPUS
+            </button>
+            <button onclick="bulkToggleStatus()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2 px-3 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1">
+                ✓ STATUS
+            </button>
+        </div>
     </div>
 
     <!-- Header -->
     <div class="max-w-[95%] mx-auto mb-4 flex justify-between items-center border-b border-indigo-500/30 pb-3">
         <div>
             <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 tracking-tighter">
-                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V3.4_MGMT_TOOLS</span>
+                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V3.5_FLEX_MGMT</span>
             </h1>
             <p class="text-[10px] text-indigo-300/60">Mass Data Injection & Verification Protocol</p>
         </div>
@@ -110,10 +115,14 @@
                 <div id="statusBox" class="mt-3 p-3 rounded-lg text-[10px] font-mono hidden max-h-32 overflow-y-auto border shadow-inner"></div>
             </div>
 
+            <!-- PANEL BATCH HISTORY (DINAMIS SESUAI TANGGAL) -->
             <div class="lg:col-span-1 glass p-5 rounded-xl border border-indigo-500/20 flex flex-col h-full">
-                <h2 class="text-sm font-bold text-white mb-3 border-b border-indigo-500/30 pb-2">BATCH HISTORY (Today)</h2>
+                <h2 class="text-sm font-bold text-white mb-3 border-b border-indigo-500/30 pb-2 flex justify-between items-center">
+                    <span>BATCH HISTORY</span>
+                    <span id="batchDateLabel" class="text-[10px] text-indigo-400 font-mono"></span>
+                </h2>
                 <div class="flex-grow overflow-y-auto pr-1" id="batchListContainer">
-                    <p class="text-[10px] text-slate-500 italic text-center mt-10">Belum ada input data hari ini.</p>
+                    <p class="text-[10px] text-slate-500 italic text-center mt-10">Memuat data...</p>
                 </div>
             </div>
         </div>
@@ -133,10 +142,15 @@
                     </div>
                 </div>
 
+                <!-- TABLE WRAPPER -->
                 <div class="overflow-x-auto rounded-lg border border-indigo-500/20 bg-slate-900/50">
                     <table class="w-full text-left text-xs" id="dataTable">
                         <thead class="bg-indigo-950/90 text-indigo-200 border-b border-indigo-500/30">
                             <tr>
+                                <!-- Checkbox Master -->
+                                <th class="p-2 w-8 text-center no-select">
+                                    <input type="checkbox" id="checkAll" onchange="toggleSelectAll(this)">
+                                </th>
                                 <th class="p-2 font-bold w-10 text-center no-select">No.</th>
                                 <th class="p-2 font-bold text-center w-10 no-select">Sts</th>
                                 <th class="p-2 font-bold whitespace-nowrap no-select">Waktu</th>
@@ -201,9 +215,10 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- GLOBAL VARIABLES FOR FEATURES ---
-        let renderedItems = []; // Menyimpan data yang sedang tampil di layar (untuk akses indeks)
-        let lastCheckedIndex = null; // Menyimpan indeks terakhir yang diklik (untuk shift-click)
+        // --- GLOBAL STATE ---
+        let renderedItems = []; // Data yang tampil di layar
+        let selectedIds = new Set(); // ID yang dicentang
+        let lastCheckedIndex = null; // Untuk fitur Shift-Click
 
         // --- UTILITIES ---
         function sanitizePhoneNumber(phone) { 
@@ -213,6 +228,7 @@
         function getTodayDate() { return new Date().toISOString().split('T')[0]; }
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID'); }, 1000);
 
+        // --- FORM LOGIC ---
         document.getElementById('smartRawData').addEventListener('input', function() {
             const count = this.value.split('\n').filter(line => line.trim() !== '').length;
             document.getElementById('countRaw').innerText = count;
@@ -221,12 +237,40 @@
             const count = this.value.split('\n').filter(line => line.trim() !== '').length;
             document.getElementById('countMaps').innerText = count;
         });
-
         document.getElementById('clearBtn').addEventListener('click', (e) => {
             e.preventDefault();
             document.getElementById('mitraForm').reset();
             document.getElementById('countRaw').innerText = '0';
             document.getElementById('countMaps').innerText = '0';
+        });
+
+        // --- COPY INTERCEPTOR (V3.2 Logic - Plain Text Only) ---
+        document.addEventListener('copy', function(e) {
+            const selection = window.getSelection();
+            if (selection.rangeCount === 0) return;
+            const rows = document.querySelectorAll('#tableBody tr');
+            let clipboardText = "";
+            let rowsCopied = 0;
+            rows.forEach(row => {
+                if (selection.containsNode(row, true)) {
+                    const nameCell = row.querySelector('.col-name');
+                    const waCell = row.querySelector('.col-wa');
+                    if(nameCell && waCell) {
+                        const name = nameCell.innerText.trim().replace(/[\t\n\r]+/g, ' '); 
+                        const wa = waCell.innerText.trim().replace(/[\t\n\r]+/g, '');
+                        clipboardText += `${name}\t${wa}\n`;
+                        rowsCopied++;
+                    }
+                }
+            });
+            if (rowsCopied > 0) {
+                e.preventDefault();
+                e.clipboardData.setData('text/plain', clipboardText);
+                const btn = document.getElementById('totalDataCount');
+                const oldText = btn.innerText;
+                btn.innerText = `✅ Tersalin ${rowsCopied} data rapi!`;
+                setTimeout(() => btn.innerText = oldText, 2500);
+            }
         });
 
         function logStatus(msg, type) {
@@ -239,117 +283,134 @@
         }
 
         // ========================================================
-        // ⚡ FLOATING COUNTER LOGIC (FEATURE 1) ⚡
+        // ⚡ SELECTION & BULK MANAGEMENT LOGIC (NEW) ⚡
         // ========================================================
-        document.addEventListener('selectionchange', () => {
-            const selection = window.getSelection();
-            const counterDiv = document.getElementById('selectionCounter');
-            const countVal = document.getElementById('selCountVal');
-            
-            if (selection.rangeCount === 0 || selection.isCollapsed) {
-                counterDiv.classList.add('hidden');
-                return;
-            }
+        
+        // 1. Handle Single Checkbox Click with Shift Support
+        window.toggleSelect = (id, index, event) => {
+            const checkbox = document.getElementById(`cb-${id}`);
+            const isChecked = checkbox.checked;
 
-            const rows = document.querySelectorAll('#tableBody tr');
-            let selectedRowCount = 0;
-
-            rows.forEach(row => {
-                if (selection.containsNode(row, true)) {
-                    selectedRowCount++;
-                }
-            });
-
-            if (selectedRowCount > 0) {
-                countVal.innerText = selectedRowCount;
-                counterDiv.classList.remove('hidden');
-            } else {
-                counterDiv.classList.add('hidden');
-            }
-        });
-
-        // ========================================================
-        // ⚡ COPY INTERCEPTOR ⚡
-        // ========================================================
-        document.addEventListener('copy', function(e) {
-            const selection = window.getSelection();
-            if (selection.rangeCount === 0) return;
-
-            const rows = document.querySelectorAll('#tableBody tr');
-            let clipboardText = "";
-            let rowsCopied = 0;
-
-            rows.forEach(row => {
-                if (selection.containsNode(row, true)) {
-                    const nameCell = row.querySelector('.col-name');
-                    const waCell = row.querySelector('.col-wa');
-                    
-                    if(nameCell && waCell) {
-                        const name = nameCell.innerText.trim().replace(/[\t\n\r]+/g, ' '); 
-                        const wa = waCell.innerText.trim().replace(/[\t\n\r]+/g, '');
-                        clipboardText += `${name}\t${wa}\n`;
-                        rowsCopied++;
-                    }
-                }
-            });
-
-            if (rowsCopied > 0) {
-                e.preventDefault();
-                e.clipboardData.setData('text/plain', clipboardText);
-                
-                const btn = document.getElementById('totalDataCount');
-                const oldText = btn.innerText;
-                btn.innerText = `✅ Tersalin ${rowsCopied} data rapi!`;
-                setTimeout(() => btn.innerText = oldText, 2500);
-            }
-        });
-
-        // --- GLOBAL FUNCTIONS ---
-        window.deleteItem = async (id) => {
-            if(confirm('Yakin hapus data ini?')) {
-                try { await remove(ref(db, 'mitra/' + id)); loadData(); } catch(e) { alert('Gagal hapus: ' + e.message); }
-            }
-        };
-
-        // ========================================================
-        // ⚡ SHIFT-CLICK MULTI SELECT (FEATURE 2) ⚡
-        // ========================================================
-        window.toggleStatus = async (id, currentStatus, index, event) => {
-            // Tentukan status target (kebalikan dari status saat ini)
-            const newStatus = (currentStatus === 'used') ? 'new' : 'used';
-            const updates = {};
-
-            // Cek apakah user menahan tombol SHIFT dan ada baris sebelumnya yang diklik
             if (event.shiftKey && lastCheckedIndex !== null) {
                 const start = Math.min(lastCheckedIndex, index);
                 const end = Math.max(lastCheckedIndex, index);
-                let count = 0;
+                const targetState = document.getElementById(`cb-${renderedItems[lastCheckedIndex].id}`).checked;
 
-                // Loop semua item dalam range dan ubah statusnya
                 for (let i = start; i <= end; i++) {
                     const item = renderedItems[i];
                     if (item) {
-                        updates[`mitra/${item.id}/status`] = newStatus;
-                        count++;
+                        const cb = document.getElementById(`cb-${item.id}`);
+                        if(cb) {
+                            cb.checked = targetState;
+                            if(targetState) selectedIds.add(item.id);
+                            else selectedIds.delete(item.id);
+                            updateRowVisual(item.id, targetState);
+                        }
                     }
                 }
-                
-                // Lakukan Bulk Update
-                try {
-                    await update(ref(db), updates);
-                    // Jangan update lastCheckedIndex agar bisa extend selection lagi jika mau
-                } catch(e) { alert('Gagal multi-update: ' + e.message); }
-
             } else {
-                // Single Update (Normal Click)
-                try {
-                    await update(ref(db, 'mitra/' + id), { status: newStatus });
-                    lastCheckedIndex = index; // Simpan indeks ini sebagai titik awal
-                } catch(e) { alert('Gagal update status'); }
+                if (isChecked) selectedIds.add(id);
+                else selectedIds.delete(id);
+                updateRowVisual(id, isChecked);
+                lastCheckedIndex = index;
             }
+            updateActionBar();
+        };
+
+        // 2. Select All Visible
+        window.toggleSelectAll = (masterCheckbox) => {
+            const isChecked = masterCheckbox.checked;
+            renderedItems.forEach(item => {
+                const cb = document.getElementById(`cb-${item.id}`);
+                if(cb) {
+                    cb.checked = isChecked;
+                    if(isChecked) selectedIds.add(item.id);
+                    else selectedIds.delete(item.id);
+                    updateRowVisual(item.id, isChecked);
+                }
+            });
+            updateActionBar();
+        };
+
+        window.clearSelection = () => {
+            document.getElementById('checkAll').checked = false;
+            toggleSelectAll(document.getElementById('checkAll'));
+        };
+
+        function updateRowVisual(id, isSelected) {
+            const row = document.getElementById(`row-${id}`);
+            if (row) {
+                if (isSelected) row.classList.add('row-selected');
+                else row.classList.remove('row-selected');
+            }
+        }
+
+        function updateActionBar() {
+            const bar = document.getElementById('selectionActionBar');
+            const countLabel = document.getElementById('selCountVal');
             
-            // Reload data hanya jika diperlukan, atau optimasi UI lokal
-            loadData(); 
+            if (selectedIds.size > 0) {
+                bar.classList.remove('hidden');
+                bar.classList.remove('translate-y-2');
+                countLabel.innerText = selectedIds.size;
+            } else {
+                bar.classList.add('translate-y-2');
+                setTimeout(() => { if(selectedIds.size === 0) bar.classList.add('hidden'); }, 200);
+            }
+        }
+
+        // 3. BULK DELETE
+        window.bulkDelete = async () => {
+            if(!confirm(`⚠️ Yakin hapus ${selectedIds.size} data terpilih?`)) return;
+            
+            const updates = {};
+            selectedIds.forEach(id => {
+                updates[`mitra/${id}`] = null;
+            });
+
+            try {
+                await update(ref(db), updates);
+                selectedIds.clear();
+                updateActionBar();
+                loadData();
+                alert('Data berhasil dihapus.');
+            } catch(e) { alert('Gagal hapus: ' + e.message); }
+        };
+
+        // 4. BULK STATUS TOGGLE
+        window.bulkToggleStatus = async () => {
+            const updates = {};
+            // Tentukan target (jika mayoritas used -> new, jika mayoritas new -> used)
+            let usedCount = 0;
+            selectedIds.forEach(id => {
+                const item = renderedItems.find(x => x.id === id);
+                if(item && item.status === 'used') usedCount++;
+            });
+            
+            const targetStatus = (usedCount > selectedIds.size / 2) ? 'new' : 'used';
+
+            selectedIds.forEach(id => {
+                updates[`mitra/${id}/status`] = targetStatus;
+            });
+
+            try {
+                await update(ref(db), updates);
+                selectedIds.clear();
+                updateActionBar();
+                loadData();
+            } catch(e) { alert('Gagal update: ' + e.message); }
+        };
+
+        // --- EXISTING SINGLE FUNCTIONS ---
+        window.deleteItem = async (id) => {
+            if(confirm('Yakin hapus data ini?')) {
+                try { await remove(ref(db, 'mitra/' + id)); loadData(); } catch(e) { alert('Gagal: ' + e.message); }
+            }
+        };
+
+        window.toggleStatus = async (id, currentStatus) => {
+            const newStatus = (currentStatus === 'used') ? 'new' : 'used';
+            try { await update(ref(db, 'mitra/' + id), { status: newStatus }); loadData(); } catch(e) { alert('Gagal'); }
         };
 
         window.openEditModal = async (id) => {
@@ -367,16 +428,14 @@
         };
 
         window.deleteBatch = async (batchId, count) => {
-            const code = Math.floor(1000 + Math.random() * 9000);
-            const userInput = prompt(`⚠️ Hapus ${count} data?\nKetik kode ${code} untuk konfirmasi:`);
-            if (userInput == code) {
+            if(confirm(`⚠️ Hapus Batch ini (${count} data)?`)) {
                 try {
                     const snapshot = await get(ref(db, 'mitra'));
                     if (snapshot.exists()) {
                         const updates = {};
                         snapshot.forEach((child) => { if (child.val().batch_id == batchId) updates[child.key] = null; });
                         await update(ref(db, 'mitra'), updates);
-                        alert(`Batch dihapus.`); loadData();
+                        loadData();
                     }
                 } catch (e) { alert('Error: ' + e.message); }
             }
@@ -396,9 +455,7 @@
             try { await update(ref(db, `mitra/${id}`), updates); document.getElementById('editModal').classList.add('hidden'); loadData(); } catch(e) { alert('Gagal update'); }
         });
 
-        // --- CORE LOGIC ---
-        document.getElementById('filterDate').value = ''; 
-
+        // --- SUBMIT LOGIC ---
         document.getElementById('mitraForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
@@ -412,7 +469,7 @@
             const arrMaps = document.getElementById('bulkMaps').value.split('\n').filter(line => line.trim() !== '');
 
             if (arrMaps.length > 0 && arrMaps.length !== rawLines.length) {
-                logStatus(`GAGAL: Jumlah link Maps (${arrMaps.length}) tidak sama dengan jumlah Data Nama/WA (${rawLines.length})`, 'error');
+                logStatus(`GAGAL: Jumlah link Maps (${arrMaps.length}) tidak sama dengan jumlah Data (${rawLines.length})`, 'error');
                 btn.disabled = false; btn.innerHTML = `INJECT DATA 🚀`; return;
             }
 
@@ -429,18 +486,17 @@
                 const nama = parts[0] ? parts[0].trim() : "Tanpa Nama";
                 const rawWa = parts[1] ? parts[1].trim() : "";
                 const maps = arrMaps[i] ? arrMaps[i].trim() : "";
-                
                 const waId = sanitizePhoneNumber(rawWa);
 
                 if (!waId) { 
-                    logStatus(`Baris ${i+1}: WA Kosong/Invalid. Skip.`, 'warn');
+                    logStatus(`Baris ${i+1}: WA Invalid. Skip.`, 'warn');
                     continue; 
                 }
 
                 try {
                     const snapshot = await get(child(dbRef, `mitra/${waId}`));
                     if (snapshot.exists()) {
-                        logStatus(`Skip: ${nama} (ID: ${waId}) ADA.`, 'warn');
+                        logStatus(`Skip: ${nama} (${waId}) ADA.`, 'warn');
                         skipCount++;
                     } else {
                         await set(ref(db, 'mitra/' + waId), {
@@ -469,20 +525,24 @@
             }
         });
 
+        // --- LOAD DATA (UPDATED) ---
         window.loadData = async function() {
             const tableBody = document.getElementById('tableBody');
             const batchListContainer = document.getElementById('batchListContainer');
+            const batchDateLabel = document.getElementById('batchDateLabel');
             const filterDate = document.getElementById('filterDate').value; 
             const viewModeText = document.getElementById('viewModeText');
             
-            tableBody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-indigo-400 animate-pulse tracking-widest">FETCHING DATA...</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-indigo-400 animate-pulse tracking-widest">FETCHING DATA...</td></tr>`;
 
             try {
                 const dbRef = ref(db, 'mitra');
                 const snapshot = await get(dbRef);
 
                 tableBody.innerHTML = ''; batchListContainer.innerHTML = '';
-                renderedItems = []; // Reset array lokal
+                renderedItems = []; 
+                selectedIds.clear(); // Reset seleksi saat refresh
+                updateActionBar();
 
                 if (snapshot.exists()) {
                     const data = snapshot.val();
@@ -494,6 +554,10 @@
                     const threeDaysAgo = new Date();
                     threeDaysAgo.setDate(todayDate.getDate() - 3);
                     threeDaysAgo.setHours(0,0,0,0); 
+
+                    // Batch Label Update
+                    if(filterDate) batchDateLabel.innerText = `(Tanggal ${filterDate})`;
+                    else batchDateLabel.innerText = "(3 Hari Terakhir)";
 
                     sortedData.forEach(item => {
                         let showItem = false;
@@ -507,13 +571,15 @@
                         }
 
                         if (showItem) {
-                            // Simpan item ke renderedItems untuk keperluan multi-select
+                            // Simpan ke Rendered Items untuk akses logic checkbox
                             const currentIndex = renderedItems.length;
-                            renderedItems.push({ id: sanitizePhoneNumber(item.wa_display), status: item.status || 'new' });
-                            
+                            renderedItems.push(item);
+                            renderedItems[currentIndex].id = sanitizePhoneNumber(item.wa_display); // Pastikan ID tersimpan
+
                             count++;
                             
-                            if (item.batch_id && item.tanggal_input === getTodayDate()) {
+                            // LOGIC BATCH BARU (DINAMIS SESUAI FILTER)
+                            if (item.batch_id) {
                                 if (!batches[item.batch_id]) batches[item.batch_id] = { count: 0, time: item.timestamp };
                                 batches[item.batch_id].count++;
                             }
@@ -524,49 +590,51 @@
                             const isUsed = item.status === 'used';
                             const rowClass = isUsed ? 'row-used' : 'row-new';
                             const statusBtnClass = isUsed ? 'bg-slate-700 text-slate-400' : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white';
-                            
-                            // Perhatikan: Kami mengirimkan 'currentIndex' dan 'event' ke toggleStatus
+                            const itemId = sanitizePhoneNumber(item.wa_display);
+
                             const row = `
-                                <tr class="${rowClass} hover:bg-indigo-600/10 transition-colors border-b border-indigo-500/10 group leading-tight">
-                                    <td class="p-2 text-center text-slate-500 font-mono text-[10px] align-middle no-select">${count}</td>
-                                    <td class="p-2 text-center align-middle no-select">
-                                        <button onclick="toggleStatus('${sanitizePhoneNumber(item.wa_display)}','${item.status||'new'}', ${currentIndex}, event)" 
-                                            class="w-6 h-6 rounded flex items-center justify-center transition-all ${statusBtnClass}" title="${isUsed?'Batal':'Pakai (Tahan Shift untuk Banyak)'}">
-                                            ${isUsed?'↩':'✓'}
-                                        </button>
+                                <tr id="row-${itemId}" class="${rowClass} hover:bg-indigo-600/10 transition-colors border-b border-indigo-500/10 group leading-tight">
+                                    <td class="p-2 text-center align-middle">
+                                        <input type="checkbox" id="cb-${itemId}" class="row-checkbox" onclick="toggleSelect('${itemId}', ${currentIndex}, event)">
                                     </td>
+                                    <td class="p-2 text-center text-slate-500 font-mono text-[10px] align-middle no-select">${count}</td>
+                                    <td class="p-2 text-center align-middle no-select"><button onclick="toggleStatus('${itemId}','${item.status||'new'}')" class="w-6 h-6 rounded flex items-center justify-center transition-all ${statusBtnClass}" title="${isUsed?'Batal':'Pakai'}">${isUsed?'↩':'✓'}</button></td>
                                     <td class="p-2 font-mono text-[10px] text-indigo-300 align-middle whitespace-nowrap no-select">${compactDateTime}</td>
                                     <td class="p-2 align-middle no-select"><div class="text-[10px] text-cyan-200 font-semibold truncate max-w-[100px]" title="${lokasiLabel}">${lokasiLabel}</div></td>
-                                    
                                     <td class="p-2 align-middle selectable col-name text-white font-bold text-[11px] truncate max-w-[150px] border-l border-indigo-500/10" title="${item.nama_usaha}">${item.nama_usaha}</td>
                                     <td class="p-2 align-middle selectable col-wa font-mono text-[10px] text-emerald-400 whitespace-nowrap border-r border-indigo-500/10">${item.wa_display}</td>
-                                    
-                                    <td class="p-2 text-center align-middle flex justify-center gap-2 no-select"><a href="${item.maps}" target="_blank" title="Maps" class="w-6 h-6 flex items-center justify-center rounded bg-indigo-500/20 text-indigo-300 hover:text-white hover:bg-indigo-500 transition-all">➤</a><button onclick="openEditModal('${sanitizePhoneNumber(item.wa_display)}')" title="Edit" class="w-6 h-6 flex items-center justify-center rounded bg-yellow-500/20 text-yellow-300 hover:text-white hover:bg-yellow-500 transition-all">✎</button><button onclick="deleteItem('${sanitizePhoneNumber(item.wa_display)}')" title="Hapus" class="w-6 h-6 flex items-center justify-center rounded bg-red-500/20 text-red-300 hover:text-white hover:bg-red-500 transition-all">🗑</button></td>
+                                    <td class="p-2 text-center align-middle flex justify-center gap-2 no-select"><a href="${item.maps}" target="_blank" title="Maps" class="w-6 h-6 flex items-center justify-center rounded bg-indigo-500/20 text-indigo-300 hover:text-white hover:bg-indigo-500 transition-all">➤</a><button onclick="openEditModal('${itemId}')" title="Edit" class="w-6 h-6 flex items-center justify-center rounded bg-yellow-500/20 text-yellow-300 hover:text-white hover:bg-yellow-500 transition-all">✎</button><button onclick="deleteItem('${itemId}')" title="Hapus" class="w-6 h-6 flex items-center justify-center rounded bg-red-500/20 text-red-300 hover:text-white hover:bg-red-500 transition-all">🗑</button></td>
                                 </tr>
                             `;
                             tableBody.insertAdjacentHTML('beforeend', row);
                         }
                     });
 
+                    // RENDER BATCH LIST (Sesuai Data yang Tampil)
                     const batchKeys = Object.keys(batches).sort((a,b) => b - a);
                     if (batchKeys.length > 0) {
                         batchKeys.forEach(bId => {
                             const bData = batches[bId];
                             const timeStr = new Date(bData.time).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+                            const dateStr = new Date(bData.time).toLocaleDateString('id-ID', {day:'numeric', month:'short'});
+                            
                             batchListContainer.insertAdjacentHTML('beforeend', `
                                 <div class="bg-indigo-900/40 border border-indigo-500/30 p-2 rounded mb-2 flex justify-between items-center group hover:border-indigo-400 transition-all">
-                                    <div><div class="text-[10px] text-indigo-300 font-mono">JAM ${timeStr}</div><div class="text-xs font-bold text-white">${bData.count} DATA</div></div>
+                                    <div>
+                                        <div class="text-[10px] text-indigo-300 font-mono">${dateStr} | ${timeStr}</div>
+                                        <div class="text-xs font-bold text-white">${bData.count} DATA</div>
+                                    </div>
                                     <button onclick="deleteBatch('${bId}', ${bData.count})" class="text-[10px] bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white px-2 py-1 rounded">HAPUS</button>
                                 </div>
                             `);
                         });
-                    } else { batchListContainer.innerHTML = `<p class="text-[10px] text-slate-500 italic text-center mt-4">Belum ada input hari ini.</p>`; }
+                    } else { batchListContainer.innerHTML = `<p class="text-[10px] text-slate-500 italic text-center mt-4">Tidak ada batch pada rentang waktu ini.</p>`; }
 
                     document.getElementById('totalDataCount').innerText = `Total Row: ${count}`;
-                    if (count === 0) tableBody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500 text-xs italic">Tidak ada data 3 hari terakhir.</td></tr>`;
+                    if (count === 0) tableBody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500 text-xs italic">Tidak ada data.</td></tr>`;
 
-                } else { tableBody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500 text-xs italic">Database Kosong.</td></tr>`; }
-            } catch (error) { console.error(error); tableBody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-red-400">Connection Failed.</td></tr>`; }
+                } else { tableBody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500 text-xs italic">Database Kosong.</td></tr>`; }
+            } catch (error) { console.error(error); tableBody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-400">Connection Failed.</td></tr>`; }
         }
 
         document.getElementById('filterDate').addEventListener('change', loadData);
