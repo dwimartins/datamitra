@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mitra Database System v3.5</title>
+    <title>Mitra Database System v3.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -25,39 +25,33 @@
         .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-        .row-used { opacity: 0.5; filter: grayscale(100%); background: rgba(0,0,0,0.3); }
-        .row-new { background: rgba(16, 185, 129, 0.05); }
+        /* Row Styles */
+        .row-contacted { opacity: 0.6; background: rgba(16, 185, 129, 0.05); } /* Hijau tipis */
+        .row-new { background: rgba(239, 68, 68, 0.02); } /* Merah tipis banget */
         .row-selected { background: rgba(99, 102, 241, 0.2) !important; border-left: 2px solid #6366f1; }
 
-        /* --- EXCEL SELECTION HELPER --- */
+        /* Helpers */
         .no-select { user-select: none; cursor: default; }
         .selectable { user-select: text; cursor: text; }
         ::selection { background: rgba(99, 102, 241, 0.5); color: white; }
+        input[type="checkbox"] { accent-color: #4f46e5; cursor: pointer; width: 14px; height: 14px; }
         
-        /* Checkbox Custom */
-        input[type="checkbox"] {
-            accent-color: #4f46e5;
-            cursor: pointer;
-            width: 14px;
-            height: 14px;
-        }
+        /* Tab Active State */
+        .tab-active { border-bottom: 2px solid #6366f1; color: white; }
+        .tab-inactive { color: #94a3b8; border-bottom: 2px solid transparent; }
     </style>
 </head>
 <body class="bg-[conic-gradient(at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-indigo-950 to-slate-900 text-indigo-100 min-h-screen p-4 md:p-8">
 
-    <!-- FLOATING ACTION BAR (REVISI) -->
+    <!-- FLOATING ACTION BAR -->
     <div id="selectionActionBar" class="fixed bottom-6 right-6 bg-slate-800 text-white p-2 rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-indigo-500/50 hidden z-50 flex flex-col gap-2 min-w-[200px] transition-all transform translate-y-2">
         <div class="flex items-center justify-between px-2 pb-2 border-b border-white/10">
             <span class="text-xs font-bold text-indigo-300">TERPILIH: <span id="selCountVal" class="text-white text-lg ml-1">0</span></span>
             <button onclick="clearSelection()" class="text-[10px] text-slate-400 hover:text-white">Batal</button>
         </div>
         <div class="flex gap-2">
-            <button onclick="bulkDelete()" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 px-3 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1">
-                🗑 HAPUS
-            </button>
-            <button onclick="bulkToggleStatus()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2 px-3 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1">
-                ✓ STATUS
-            </button>
+            <button onclick="bulkDelete()" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 px-3 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1">🗑 HAPUS</button>
+            <button onclick="bulkToggleStatus()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2 px-3 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1">✓ STATUS</button>
         </div>
     </div>
 
@@ -65,7 +59,7 @@
     <div class="max-w-[95%] mx-auto mb-4 flex justify-between items-center border-b border-indigo-500/30 pb-3">
         <div>
             <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 tracking-tighter">
-                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V3.5_FLEX_MGMT</span>
+                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V3.6_JOURNAL</span>
             </h1>
             <p class="text-[10px] text-indigo-300/60">Mass Data Injection & Verification Protocol</p>
         </div>
@@ -78,8 +72,10 @@
     <!-- Layout Utama -->
     <div class="max-w-[95%] mx-auto flex flex-col gap-6 pb-10">
         
-        <!-- BAGIAN 1: FORM INPUT -->
+        <!-- BAGIAN 1: INPUT & SIDE PANEL (TABS) -->
         <div class="w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- FORM INPUT (2/3 Layar) -->
             <div class="lg:col-span-2 glass p-5 rounded-xl shadow-2xl shadow-indigo-900/20 relative overflow-hidden group">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-sm font-bold text-white flex items-center gap-2">
@@ -96,11 +92,9 @@
                     </div>
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold text-indigo-300 uppercase flex justify-between">
-                            <span>PASTE DATA DARI EXCEL (NAMA & WA)</span> 
-                            <span class="text-slate-500">Lines: <span id="countRaw" class="text-white">0</span></span>
+                            <span>PASTE DATA DARI EXCEL (NAMA & WA)</span> <span class="text-slate-500">Lines: <span id="countRaw" class="text-white">0</span></span>
                         </label>
-                        <textarea id="smartRawData" rows="8" placeholder="Paste data Nama dan WA di sini..." 
-                            class="w-full bg-slate-900/80 border border-indigo-500/30 rounded-lg p-3 text-xs focus:border-indigo-400 focus:outline-none text-emerald-50 resize-none whitespace-pre font-mono leading-relaxed placeholder-slate-600"></textarea>
+                        <textarea id="smartRawData" rows="8" placeholder="Paste data Nama dan WA di sini..." class="w-full bg-slate-900/80 border border-indigo-500/30 rounded-lg p-3 text-xs focus:border-indigo-400 focus:outline-none text-emerald-50 resize-none whitespace-pre font-mono placeholder-slate-600"></textarea>
                     </div>
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold text-indigo-300 uppercase flex justify-between">
@@ -115,15 +109,38 @@
                 <div id="statusBox" class="mt-3 p-3 rounded-lg text-[10px] font-mono hidden max-h-32 overflow-y-auto border shadow-inner"></div>
             </div>
 
-            <!-- PANEL BATCH HISTORY (DINAMIS SESUAI TANGGAL) -->
-            <div class="lg:col-span-1 glass p-5 rounded-xl border border-indigo-500/20 flex flex-col h-full">
-                <h2 class="text-sm font-bold text-white mb-3 border-b border-indigo-500/30 pb-2 flex justify-between items-center">
-                    <span>BATCH HISTORY</span>
-                    <span id="batchDateLabel" class="text-[10px] text-indigo-400 font-mono"></span>
-                </h2>
-                <div class="flex-grow overflow-y-auto pr-1" id="batchListContainer">
-                    <p class="text-[10px] text-slate-500 italic text-center mt-10">Memuat data...</p>
+            <!-- RIGHT PANEL: TABS (BATCH HISTORY & DAILY NOTES) -->
+            <div class="lg:col-span-1 glass p-5 rounded-xl border border-indigo-500/20 flex flex-col h-full min-h-[450px]">
+                
+                <!-- Tab Headers -->
+                <div class="flex border-b border-indigo-500/30 mb-4">
+                    <button onclick="switchTab('batch')" id="tabBatch" class="flex-1 py-2 text-[10px] uppercase font-bold transition-all tab-active">BATCH HISTORY</button>
+                    <button onclick="switchTab('notes')" id="tabNotes" class="flex-1 py-2 text-[10px] uppercase font-bold transition-all tab-inactive">DAILY NOTES</button>
                 </div>
+
+                <!-- Content 1: Batch List -->
+                <div id="panelBatch" class="flex-1 flex flex-col overflow-hidden">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[9px] text-indigo-400 uppercase">Input History</span>
+                        <span id="batchDateLabel" class="text-[9px] text-slate-500 font-mono"></span>
+                    </div>
+                    <div class="flex-grow overflow-y-auto pr-1" id="batchListContainer">
+                        <p class="text-[10px] text-slate-500 italic text-center mt-10">Memuat data...</p>
+                    </div>
+                </div>
+
+                <!-- Content 2: Daily Notes (New) -->
+                <div id="panelNotes" class="hidden flex-1 flex flex-col overflow-hidden">
+                    <form id="noteForm" class="mb-3 flex gap-2">
+                        <input type="text" id="noteInput" required placeholder="Tulis catatan harian..." 
+                            class="flex-1 bg-slate-900 border border-indigo-500/30 rounded p-2 text-xs text-white focus:border-cyan-400 outline-none">
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 rounded text-xs font-bold shadow-lg">ADD</button>
+                    </form>
+                    <div id="notesList" class="flex-grow overflow-y-auto pr-1 space-y-2">
+                        <p class="text-[10px] text-slate-500 italic text-center mt-10">Memuat catatan...</p>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -142,17 +159,13 @@
                     </div>
                 </div>
 
-                <!-- TABLE WRAPPER -->
                 <div class="overflow-x-auto rounded-lg border border-indigo-500/20 bg-slate-900/50">
                     <table class="w-full text-left text-xs" id="dataTable">
                         <thead class="bg-indigo-950/90 text-indigo-200 border-b border-indigo-500/30">
                             <tr>
-                                <!-- Checkbox Master -->
-                                <th class="p-2 w-8 text-center no-select">
-                                    <input type="checkbox" id="checkAll" onchange="toggleSelectAll(this)">
-                                </th>
+                                <th class="p-2 w-8 text-center no-select"><input type="checkbox" id="checkAll" onchange="toggleSelectAll(this)"></th>
                                 <th class="p-2 font-bold w-10 text-center no-select">No.</th>
-                                <th class="p-2 font-bold text-center w-10 no-select">Sts</th>
+                                <th class="p-2 font-bold text-center w-12 no-select">Sts</th>
                                 <th class="p-2 font-bold whitespace-nowrap no-select">Waktu</th>
                                 <th class="p-2 font-bold no-select">Lokasi</th>
                                 <th class="p-2 font-bold selectable text-indigo-300 border-l border-indigo-500/10">Nama Usaha</th>
@@ -172,35 +185,23 @@
         </div>
     </div>
 
-    <!-- MODAL EDIT -->
+    <!-- MODAL EDIT (Hidden) -->
     <div id="editModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="glass p-6 rounded-2xl w-full max-w-md modal-enter border border-indigo-500/40 shadow-[0_0_50px_rgba(79,70,229,0.3)]">
             <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">✏️ EDIT DATA MITRA</h3>
             <form id="editForm" class="space-y-3">
                 <input type="hidden" id="editWaId">
-                <div>
-                    <label class="text-[10px] text-indigo-300 uppercase">Nama Usaha</label>
-                    <input type="text" id="editNama" class="w-full bg-slate-900 border border-indigo-500/30 rounded p-2 text-xs text-white focus:border-cyan-400 outline-none">
-                </div>
-                <div>
-                    <label class="text-[10px] text-indigo-300 uppercase">Lokasi Wilayah</label>
-                    <input type="text" id="editLokasi" class="w-full bg-slate-900 border border-indigo-500/30 rounded p-2 text-xs text-white focus:border-cyan-400 outline-none">
-                </div>
-                <div>
-                    <label class="text-[10px] text-indigo-300 uppercase">Link Maps</label>
-                    <textarea id="editMaps" rows="3" class="w-full bg-slate-900 border border-indigo-500/30 rounded p-2 text-xs text-white focus:border-cyan-400 outline-none resize-none"></textarea>
-                </div>
-                <div class="flex gap-2 pt-2">
-                    <button type="button" id="closeModal" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded text-xs font-bold transition-colors">BATAL</button>
-                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded text-xs font-bold transition-colors shadow-lg shadow-indigo-600/20">SIMPAN</button>
-                </div>
+                <div><label class="text-[10px] text-indigo-300 uppercase">Nama Usaha</label><input type="text" id="editNama" class="w-full bg-slate-900 border border-indigo-500/30 rounded p-2 text-xs text-white focus:border-cyan-400 outline-none"></div>
+                <div><label class="text-[10px] text-indigo-300 uppercase">Lokasi Wilayah</label><input type="text" id="editLokasi" class="w-full bg-slate-900 border border-indigo-500/30 rounded p-2 text-xs text-white focus:border-cyan-400 outline-none"></div>
+                <div><label class="text-[10px] text-indigo-300 uppercase">Link Maps</label><textarea id="editMaps" rows="3" class="w-full bg-slate-900 border border-indigo-500/30 rounded p-2 text-xs text-white focus:border-cyan-400 outline-none resize-none"></textarea></div>
+                <div class="flex gap-2 pt-2"><button type="button" id="closeModal" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded text-xs font-bold">BATAL</button><button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded text-xs font-bold shadow-lg">SIMPAN</button></div>
             </form>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, set, get, child, remove, update } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        import { getDatabase, ref, set, get, child, remove, update, push } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAGCiDwE1ccJUE1-jI8P1OvUtcuuTpqZHE",
@@ -216,19 +217,102 @@
         const db = getDatabase(app);
 
         // --- GLOBAL STATE ---
-        let renderedItems = []; // Data yang tampil di layar
-        let selectedIds = new Set(); // ID yang dicentang
-        let lastCheckedIndex = null; // Untuk fitur Shift-Click
+        let renderedItems = []; 
+        let selectedIds = new Set();
+        let lastCheckedIndex = null;
 
         // --- UTILITIES ---
-        function sanitizePhoneNumber(phone) { 
-            if(!phone) return "";
-            return phone.replace(/\D/g, ''); 
-        }
+        function sanitizePhoneNumber(phone) { if(!phone) return ""; return phone.replace(/\D/g, ''); }
         function getTodayDate() { return new Date().toISOString().split('T')[0]; }
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID'); }, 1000);
 
-        // --- FORM LOGIC ---
+        // --- TAB SWITCHING ---
+        window.switchTab = (tabName) => {
+            const panelBatch = document.getElementById('panelBatch');
+            const panelNotes = document.getElementById('panelNotes');
+            const tabBatch = document.getElementById('tabBatch');
+            const tabNotes = document.getElementById('tabNotes');
+
+            if(tabName === 'batch') {
+                panelBatch.classList.remove('hidden');
+                panelNotes.classList.add('hidden');
+                tabBatch.className = "flex-1 py-2 text-[10px] uppercase font-bold transition-all tab-active";
+                tabNotes.className = "flex-1 py-2 text-[10px] uppercase font-bold transition-all tab-inactive";
+            } else {
+                panelBatch.classList.add('hidden');
+                panelNotes.classList.remove('hidden');
+                tabBatch.className = "flex-1 py-2 text-[10px] uppercase font-bold transition-all tab-inactive";
+                tabNotes.className = "flex-1 py-2 text-[10px] uppercase font-bold transition-all tab-active";
+                loadNotes(); // Load notes only when tab is clicked
+            }
+        };
+
+        // --- NOTES LOGIC ---
+        document.getElementById('noteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('noteInput');
+            const text = input.value.trim();
+            if(!text) return;
+
+            try {
+                await push(ref(db, 'notes'), {
+                    text: text,
+                    timestamp: Date.now(),
+                    date_str: getTodayDate()
+                });
+                input.value = '';
+                loadNotes();
+            } catch(e) { alert('Error saving note: ' + e.message); }
+        });
+
+        window.deleteNote = async (key) => {
+            if(confirm('Hapus catatan ini?')) {
+                try { await remove(ref(db, `notes/${key}`)); loadNotes(); } catch(e) { alert('Error: ' + e.message); }
+            }
+        };
+
+        async function loadNotes() {
+            const list = document.getElementById('notesList');
+            list.innerHTML = `<p class="text-[10px] text-slate-500 italic text-center">Loading...</p>`;
+            try {
+                const snapshot = await get(ref(db, 'notes'));
+                list.innerHTML = '';
+                if(snapshot.exists()) {
+                    const notes = [];
+                    snapshot.forEach(child => { notes.push({ key: child.key, ...child.val() }); });
+                    // Sort by newest first
+                    notes.sort((a,b) => b.timestamp - a.timestamp);
+                    
+                    // Filter: Last 7 days
+                    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+                    const recentNotes = notes.filter(n => n.timestamp > sevenDaysAgo);
+
+                    if(recentNotes.length === 0) {
+                        list.innerHTML = `<p class="text-[10px] text-slate-500 italic text-center">Belum ada catatan 7 hari terakhir.</p>`;
+                        return;
+                    }
+
+                    recentNotes.forEach(n => {
+                        const date = new Date(n.timestamp).toLocaleDateString('id-ID', {day:'numeric', month:'short'});
+                        const time = new Date(n.timestamp).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+                        
+                        list.insertAdjacentHTML('beforeend', `
+                            <div class="bg-indigo-900/20 border border-indigo-500/20 p-2 rounded hover:bg-indigo-900/40 transition-colors group relative">
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="text-[9px] text-indigo-400 font-mono">${date} • ${time}</span>
+                                    <button onclick="deleteNote('${n.key}')" class="text-red-400 hover:text-red-200 hidden group-hover:block text-[9px]">✕</button>
+                                </div>
+                                <p class="text-xs text-white whitespace-pre-wrap">${n.text}</p>
+                            </div>
+                        `);
+                    });
+                } else {
+                    list.innerHTML = `<p class="text-[10px] text-slate-500 italic text-center">Belum ada catatan.</p>`;
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        // --- STANDARD APP LOGIC ---
         document.getElementById('smartRawData').addEventListener('input', function() {
             const count = this.value.split('\n').filter(line => line.trim() !== '').length;
             document.getElementById('countRaw').innerText = count;
@@ -244,7 +328,6 @@
             document.getElementById('countMaps').innerText = '0';
         });
 
-        // --- COPY INTERCEPTOR (V3.2 Logic - Plain Text Only) ---
         document.addEventListener('copy', function(e) {
             const selection = window.getSelection();
             if (selection.rangeCount === 0) return;
@@ -268,7 +351,7 @@
                 e.clipboardData.setData('text/plain', clipboardText);
                 const btn = document.getElementById('totalDataCount');
                 const oldText = btn.innerText;
-                btn.innerText = `✅ Tersalin ${rowsCopied} data rapi!`;
+                btn.innerText = `✅ Copied ${rowsCopied} rows!`;
                 setTimeout(() => btn.innerText = oldText, 2500);
             }
         });
@@ -276,56 +359,45 @@
         function logStatus(msg, type) {
             const box = document.getElementById('statusBox');
             box.classList.remove('hidden');
-            const colorClass = type === 'error' ? 'text-red-400' : (type === 'warn' ? 'text-yellow-400' : 'text-emerald-400');
-            const icon = type === 'error' ? '❌' : (type === 'warn' ? '⚠️' : '✅');
-            box.innerHTML += `<div class="${colorClass} mb-1 border-b border-white/5 pb-1">${icon} ${msg}</div>`;
+            const colorClass = type === 'error' ? 'text-red-400' : 'text-emerald-400';
+            box.innerHTML += `<div class="${colorClass} mb-1 border-b border-white/5 pb-1">${type === 'error' ? '❌' : '✅'} ${msg}</div>`;
             box.scrollTop = box.scrollHeight;
         }
 
-        // ========================================================
-        // ⚡ SELECTION & BULK MANAGEMENT LOGIC (NEW) ⚡
-        // ========================================================
-        
-        // 1. Handle Single Checkbox Click with Shift Support
+        // --- SELECTION & STATUS LOGIC ---
         window.toggleSelect = (id, index, event) => {
             const checkbox = document.getElementById(`cb-${id}`);
             const isChecked = checkbox.checked;
-
             if (event.shiftKey && lastCheckedIndex !== null) {
                 const start = Math.min(lastCheckedIndex, index);
                 const end = Math.max(lastCheckedIndex, index);
                 const targetState = document.getElementById(`cb-${renderedItems[lastCheckedIndex].id}`).checked;
-
                 for (let i = start; i <= end; i++) {
                     const item = renderedItems[i];
                     if (item) {
                         const cb = document.getElementById(`cb-${item.id}`);
                         if(cb) {
                             cb.checked = targetState;
-                            if(targetState) selectedIds.add(item.id);
-                            else selectedIds.delete(item.id);
+                            if(targetState) selectedIds.add(item.id); else selectedIds.delete(item.id);
                             updateRowVisual(item.id, targetState);
                         }
                     }
                 }
             } else {
-                if (isChecked) selectedIds.add(id);
-                else selectedIds.delete(id);
+                if (isChecked) selectedIds.add(id); else selectedIds.delete(id);
                 updateRowVisual(id, isChecked);
                 lastCheckedIndex = index;
             }
             updateActionBar();
         };
 
-        // 2. Select All Visible
         window.toggleSelectAll = (masterCheckbox) => {
             const isChecked = masterCheckbox.checked;
             renderedItems.forEach(item => {
                 const cb = document.getElementById(`cb-${item.id}`);
                 if(cb) {
                     cb.checked = isChecked;
-                    if(isChecked) selectedIds.add(item.id);
-                    else selectedIds.delete(item.id);
+                    if(isChecked) selectedIds.add(item.id); else selectedIds.delete(item.id);
                     updateRowVisual(item.id, isChecked);
                 }
             });
@@ -348,7 +420,6 @@
         function updateActionBar() {
             const bar = document.getElementById('selectionActionBar');
             const countLabel = document.getElementById('selCountVal');
-            
             if (selectedIds.size > 0) {
                 bar.classList.remove('hidden');
                 bar.classList.remove('translate-y-2');
@@ -359,58 +430,32 @@
             }
         }
 
-        // 3. BULK DELETE
         window.bulkDelete = async () => {
             if(!confirm(`⚠️ Yakin hapus ${selectedIds.size} data terpilih?`)) return;
-            
             const updates = {};
-            selectedIds.forEach(id => {
-                updates[`mitra/${id}`] = null;
-            });
-
-            try {
-                await update(ref(db), updates);
-                selectedIds.clear();
-                updateActionBar();
-                loadData();
-                alert('Data berhasil dihapus.');
-            } catch(e) { alert('Gagal hapus: ' + e.message); }
+            selectedIds.forEach(id => { updates[`mitra/${id}`] = null; });
+            try { await update(ref(db), updates); selectedIds.clear(); updateActionBar(); loadData(); } catch(e) { alert('Gagal hapus'); }
         };
 
-        // 4. BULK STATUS TOGGLE
         window.bulkToggleStatus = async () => {
             const updates = {};
-            // Tentukan target (jika mayoritas used -> new, jika mayoritas new -> used)
-            let usedCount = 0;
+            let contactedCount = 0;
             selectedIds.forEach(id => {
                 const item = renderedItems.find(x => x.id === id);
-                if(item && item.status === 'used') usedCount++;
+                if(item && item.status === 'contacted') contactedCount++;
             });
-            
-            const targetStatus = (usedCount > selectedIds.size / 2) ? 'new' : 'used';
-
-            selectedIds.forEach(id => {
-                updates[`mitra/${id}/status`] = targetStatus;
-            });
-
-            try {
-                await update(ref(db), updates);
-                selectedIds.clear();
-                updateActionBar();
-                loadData();
-            } catch(e) { alert('Gagal update: ' + e.message); }
+            const targetStatus = (contactedCount > selectedIds.size / 2) ? 'new' : 'contacted';
+            selectedIds.forEach(id => { updates[`mitra/${id}/status`] = targetStatus; });
+            try { await update(ref(db), updates); selectedIds.clear(); updateActionBar(); loadData(); } catch(e) { alert('Gagal update'); }
         };
 
-        // --- EXISTING SINGLE FUNCTIONS ---
-        window.deleteItem = async (id) => {
-            if(confirm('Yakin hapus data ini?')) {
-                try { await remove(ref(db, 'mitra/' + id)); loadData(); } catch(e) { alert('Gagal: ' + e.message); }
-            }
-        };
+        // --- SINGLE ACTIONS ---
+        window.deleteItem = async (id) => { if(confirm('Hapus?')) { try { await remove(ref(db, 'mitra/' + id)); loadData(); } catch(e) { alert('Gagal'); } } };
 
         window.toggleStatus = async (id, currentStatus) => {
-            const newStatus = (currentStatus === 'used') ? 'new' : 'used';
-            try { await update(ref(db, 'mitra/' + id), { status: newStatus }); loadData(); } catch(e) { alert('Gagal'); }
+            // Logic: new -> contacted, contacted -> new
+            const newStatus = (currentStatus === 'contacted') ? 'new' : 'contacted';
+            try { await update(ref(db, 'mitra/' + id), { status: newStatus }); loadData(); } catch(e) { alert('Gagal update'); }
         };
 
         window.openEditModal = async (id) => {
@@ -424,7 +469,7 @@
                     document.getElementById('editMaps').value = data.maps || '';
                     document.getElementById('editModal').classList.remove('hidden');
                 }
-            } catch (e) { alert('Gagal ambil data'); }
+            } catch (e) { alert('Error'); }
         };
 
         window.deleteBatch = async (batchId, count) => {
@@ -437,12 +482,11 @@
                         await update(ref(db, 'mitra'), updates);
                         loadData();
                     }
-                } catch (e) { alert('Error: ' + e.message); }
+                } catch (e) { alert('Error'); }
             }
         };
 
         window.resetTo3Days = () => { document.getElementById('filterDate').value = ''; loadData(); };
-
         document.getElementById('closeModal').addEventListener('click', () => document.getElementById('editModal').classList.add('hidden'));
         document.getElementById('editForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -455,7 +499,7 @@
             try { await update(ref(db, `mitra/${id}`), updates); document.getElementById('editModal').classList.add('hidden'); loadData(); } catch(e) { alert('Gagal update'); }
         });
 
-        // --- SUBMIT LOGIC ---
+        // --- SUBMIT ---
         document.getElementById('mitraForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
@@ -469,7 +513,7 @@
             const arrMaps = document.getElementById('bulkMaps').value.split('\n').filter(line => line.trim() !== '');
 
             if (arrMaps.length > 0 && arrMaps.length !== rawLines.length) {
-                logStatus(`GAGAL: Jumlah link Maps (${arrMaps.length}) tidak sama dengan jumlah Data (${rawLines.length})`, 'error');
+                logStatus(`GAGAL: Jumlah Maps (${arrMaps.length}) != Data (${rawLines.length})`, 'error');
                 btn.disabled = false; btn.innerHTML = `INJECT DATA 🚀`; return;
             }
 
@@ -482,42 +526,30 @@
             for (let i = 0; i < rawLines.length; i++) {
                 let parts = rawLines[i].split('\t');
                 if (parts.length < 2) parts = rawLines[i].split(','); 
-
                 const nama = parts[0] ? parts[0].trim() : "Tanpa Nama";
                 const rawWa = parts[1] ? parts[1].trim() : "";
                 const maps = arrMaps[i] ? arrMaps[i].trim() : "";
                 const waId = sanitizePhoneNumber(rawWa);
 
-                if (!waId) { 
-                    logStatus(`Baris ${i+1}: WA Invalid. Skip.`, 'warn');
-                    continue; 
-                }
+                if (!waId) { logStatus(`Line ${i+1} Invalid WA. Skip.`, 'warn'); continue; }
 
                 try {
                     const snapshot = await get(child(dbRef, `mitra/${waId}`));
                     if (snapshot.exists()) {
-                        logStatus(`Skip: ${nama} (${waId}) ADA.`, 'warn');
+                        logStatus(`Skip: ${nama} (${waId}) Exist.`, 'warn');
                         skipCount++;
                     } else {
                         await set(ref(db, 'mitra/' + waId), {
-                            nama_usaha: nama,
-                            maps: maps,
-                            wa_display: rawWa,
-                            lokasi_wilayah: loc, 
-                            tanggal_input: today,
-                            timestamp: Date.now(),
-                            batch_id: batchId,
-                            status: 'new' 
+                            nama_usaha: nama, maps: maps, wa_display: rawWa, lokasi_wilayah: loc, 
+                            tanggal_input: today, timestamp: Date.now(), batch_id: batchId, status: 'new' 
                         });
                         successCount++;
                     }
                 } catch (error) { console.error(error); }
             }
-
-            box.innerHTML += `<div class="mt-2 pt-2 border-t border-white/20 font-bold text-white">✅ Selesai: ${successCount} masuk | ⚠️ Skip: ${skipCount}</div>`;
+            box.innerHTML += `<div class="mt-2 pt-2 border-t border-white/20 font-bold text-white">✅ Success: ${successCount} | ⚠️ Skipped: ${skipCount}</div>`;
             box.scrollTop = box.scrollHeight;
             btn.disabled = false; btn.innerHTML = `INJECT DATA 🚀`;
-            
             if(successCount > 0) {
                 document.getElementById('mitraForm').reset();
                 document.getElementById('countRaw').innerText = '0';
@@ -525,7 +557,7 @@
             }
         });
 
-        // --- LOAD DATA (UPDATED) ---
+        // --- LOAD DATA ---
         window.loadData = async function() {
             const tableBody = document.getElementById('tableBody');
             const batchListContainer = document.getElementById('batchListContainer');
@@ -540,45 +572,34 @@
                 const snapshot = await get(dbRef);
 
                 tableBody.innerHTML = ''; batchListContainer.innerHTML = '';
-                renderedItems = []; 
-                selectedIds.clear(); // Reset seleksi saat refresh
-                updateActionBar();
+                renderedItems = []; selectedIds.clear(); updateActionBar();
 
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     let count = 0;
                     const sortedData = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
                     const batches = {};
+                    const threeDaysAgo = new Date(); threeDaysAgo.setDate(new Date().getDate() - 3); threeDaysAgo.setHours(0,0,0,0); 
 
-                    const todayDate = new Date();
-                    const threeDaysAgo = new Date();
-                    threeDaysAgo.setDate(todayDate.getDate() - 3);
-                    threeDaysAgo.setHours(0,0,0,0); 
-
-                    // Batch Label Update
-                    if(filterDate) batchDateLabel.innerText = `(Tanggal ${filterDate})`;
-                    else batchDateLabel.innerText = "(3 Hari Terakhir)";
+                    if(filterDate) batchDateLabel.innerText = `(Tgl ${filterDate})`; else batchDateLabel.innerText = "(3 Hari Terakhir)";
 
                     sortedData.forEach(item => {
                         let showItem = false;
                         if (filterDate) {
-                            viewModeText.innerText = `Menampilkan data tanggal: ${filterDate}`;
+                            viewModeText.innerText = `Data Tanggal: ${filterDate}`;
                             if (item.tanggal_input === filterDate) showItem = true;
                         } else {
-                            viewModeText.innerText = `Menampilkan data 3 hari terakhir (Default)`;
+                            viewModeText.innerText = `Data 3 Hari Terakhir`;
                             const itemDate = new Date(item.timestamp);
                             if (itemDate >= threeDaysAgo) showItem = true;
                         }
 
                         if (showItem) {
-                            // Simpan ke Rendered Items untuk akses logic checkbox
                             const currentIndex = renderedItems.length;
                             renderedItems.push(item);
-                            renderedItems[currentIndex].id = sanitizePhoneNumber(item.wa_display); // Pastikan ID tersimpan
-
+                            renderedItems[currentIndex].id = sanitizePhoneNumber(item.wa_display);
                             count++;
                             
-                            // LOGIC BATCH BARU (DINAMIS SESUAI FILTER)
                             if (item.batch_id) {
                                 if (!batches[item.batch_id]) batches[item.batch_id] = { count: 0, time: item.timestamp };
                                 batches[item.batch_id].count++;
@@ -587,52 +608,51 @@
                             const dateObj = new Date(item.timestamp);
                             const compactDateTime = `${dateObj.getDate()} ${dateObj.toLocaleString('default', { month: 'short' })} (${dateObj.getHours()}:${dateObj.getMinutes().toString().padStart(2,'0')})`;
                             const lokasiLabel = item.lokasi_wilayah ? item.lokasi_wilayah : '-';
-                            const isUsed = item.status === 'used';
-                            const rowClass = isUsed ? 'row-used' : 'row-new';
-                            const statusBtnClass = isUsed ? 'bg-slate-700 text-slate-400' : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white';
                             const itemId = sanitizePhoneNumber(item.wa_display);
+                            
+                            // STATUS LOGIC (New = X, Contacted = Check)
+                            const isContacted = item.status === 'contacted';
+                            const rowClass = isContacted ? 'row-contacted' : 'row-new';
+                            
+                            // Button Style
+                            const btnIcon = isContacted ? '✓' : '✕';
+                            const btnClass = isContacted 
+                                ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white' // Sudah (Hijau)
+                                : 'bg-red-500/10 text-red-400 hover:bg-emerald-500 hover:text-white hover:content-["✓"]'; // Belum (Merah) -> Hover jadi Hijau
 
                             const row = `
                                 <tr id="row-${itemId}" class="${rowClass} hover:bg-indigo-600/10 transition-colors border-b border-indigo-500/10 group leading-tight">
-                                    <td class="p-2 text-center align-middle">
-                                        <input type="checkbox" id="cb-${itemId}" class="row-checkbox" onclick="toggleSelect('${itemId}', ${currentIndex}, event)">
-                                    </td>
+                                    <td class="p-2 text-center align-middle"><input type="checkbox" id="cb-${itemId}" onclick="toggleSelect('${itemId}', ${currentIndex}, event)"></td>
                                     <td class="p-2 text-center text-slate-500 font-mono text-[10px] align-middle no-select">${count}</td>
-                                    <td class="p-2 text-center align-middle no-select"><button onclick="toggleStatus('${itemId}','${item.status||'new'}')" class="w-6 h-6 rounded flex items-center justify-center transition-all ${statusBtnClass}" title="${isUsed?'Batal':'Pakai'}">${isUsed?'↩':'✓'}</button></td>
+                                    <td class="p-2 text-center align-middle no-select">
+                                        <button onclick="toggleStatus('${itemId}','${item.status||'new'}')" class="w-6 h-6 rounded flex items-center justify-center transition-all ${btnClass}" title="${isContacted ? 'Sudah Dihubungi' : 'Belum Dihubungi'}">${btnIcon}</button>
+                                    </td>
                                     <td class="p-2 font-mono text-[10px] text-indigo-300 align-middle whitespace-nowrap no-select">${compactDateTime}</td>
                                     <td class="p-2 align-middle no-select"><div class="text-[10px] text-cyan-200 font-semibold truncate max-w-[100px]" title="${lokasiLabel}">${lokasiLabel}</div></td>
                                     <td class="p-2 align-middle selectable col-name text-white font-bold text-[11px] truncate max-w-[150px] border-l border-indigo-500/10" title="${item.nama_usaha}">${item.nama_usaha}</td>
                                     <td class="p-2 align-middle selectable col-wa font-mono text-[10px] text-emerald-400 whitespace-nowrap border-r border-indigo-500/10">${item.wa_display}</td>
-                                    <td class="p-2 text-center align-middle flex justify-center gap-2 no-select"><a href="${item.maps}" target="_blank" title="Maps" class="w-6 h-6 flex items-center justify-center rounded bg-indigo-500/20 text-indigo-300 hover:text-white hover:bg-indigo-500 transition-all">➤</a><button onclick="openEditModal('${itemId}')" title="Edit" class="w-6 h-6 flex items-center justify-center rounded bg-yellow-500/20 text-yellow-300 hover:text-white hover:bg-yellow-500 transition-all">✎</button><button onclick="deleteItem('${itemId}')" title="Hapus" class="w-6 h-6 flex items-center justify-center rounded bg-red-500/20 text-red-300 hover:text-white hover:bg-red-500 transition-all">🗑</button></td>
-                                </tr>
-                            `;
+                                    <td class="p-2 text-center align-middle flex justify-center gap-2 no-select"><a href="${item.maps}" target="_blank" class="w-6 h-6 flex items-center justify-center rounded bg-indigo-500/20 text-indigo-300 hover:text-white hover:bg-indigo-500 transition-all">➤</a><button onclick="openEditModal('${itemId}')" class="w-6 h-6 flex items-center justify-center rounded bg-yellow-500/20 text-yellow-300 hover:text-white hover:bg-yellow-500 transition-all">✎</button><button onclick="deleteItem('${itemId}')" class="w-6 h-6 flex items-center justify-center rounded bg-red-500/20 text-red-300 hover:text-white hover:bg-red-500 transition-all">🗑</button></td>
+                                </tr>`;
                             tableBody.insertAdjacentHTML('beforeend', row);
                         }
                     });
 
-                    // RENDER BATCH LIST (Sesuai Data yang Tampil)
                     const batchKeys = Object.keys(batches).sort((a,b) => b - a);
                     if (batchKeys.length > 0) {
                         batchKeys.forEach(bId => {
                             const bData = batches[bId];
                             const timeStr = new Date(bData.time).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
                             const dateStr = new Date(bData.time).toLocaleDateString('id-ID', {day:'numeric', month:'short'});
-                            
                             batchListContainer.insertAdjacentHTML('beforeend', `
                                 <div class="bg-indigo-900/40 border border-indigo-500/30 p-2 rounded mb-2 flex justify-between items-center group hover:border-indigo-400 transition-all">
-                                    <div>
-                                        <div class="text-[10px] text-indigo-300 font-mono">${dateStr} | ${timeStr}</div>
-                                        <div class="text-xs font-bold text-white">${bData.count} DATA</div>
-                                    </div>
+                                    <div><div class="text-[10px] text-indigo-300 font-mono">${dateStr} | ${timeStr}</div><div class="text-xs font-bold text-white">${bData.count} DATA</div></div>
                                     <button onclick="deleteBatch('${bId}', ${bData.count})" class="text-[10px] bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white px-2 py-1 rounded">HAPUS</button>
                                 </div>
                             `);
                         });
-                    } else { batchListContainer.innerHTML = `<p class="text-[10px] text-slate-500 italic text-center mt-4">Tidak ada batch pada rentang waktu ini.</p>`; }
-
+                    } else { batchListContainer.innerHTML = `<p class="text-[10px] text-slate-500 italic text-center mt-4">Tidak ada batch.</p>`; }
                     document.getElementById('totalDataCount').innerText = `Total Row: ${count}`;
                     if (count === 0) tableBody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500 text-xs italic">Tidak ada data.</td></tr>`;
-
                 } else { tableBody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500 text-xs italic">Database Kosong.</td></tr>`; }
             } catch (error) { console.error(error); tableBody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-400">Connection Failed.</td></tr>`; }
         }
