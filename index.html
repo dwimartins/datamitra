@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mitra Database System v3.8</title>
+    <title>Mitra Database System v3.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -58,11 +58,11 @@
             pointer-events: none;
         }
 
-        /* Hover Actions Logic */
-        .wa-cell-container .hover-actions {
+        /* Hover Actions Logic (General for both columns) */
+        .cell-container .hover-actions {
             display: none;
         }
-        .wa-cell-container:hover .hover-actions {
+        .cell-container:hover .hover-actions {
             display: flex;
         }
     </style>
@@ -85,7 +85,7 @@
     <div class="max-w-[95%] mx-auto mb-4 flex justify-between items-center border-b border-indigo-500/30 pb-3">
         <div>
             <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 tracking-tighter">
-                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V3.8_SMART_ACTIONS</span>
+                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V3.9_INDEPENDENT_COPY</span>
             </h1>
             <p class="text-[10px] text-indigo-300/60">Mass Data Injection & Verification Protocol</p>
         </div>
@@ -202,9 +202,9 @@
                                 <th class="p-2 font-bold text-center w-12 no-select">Sts</th>
                                 <th class="p-2 font-bold whitespace-nowrap no-select">Waktu</th>
                                 <th class="p-2 font-bold no-select">Lokasi</th>
-                                <!-- KOLOM NAMA (TIDAK BISA DICOPY/BLOK) -->
-                                <th class="p-2 font-bold no-select text-indigo-300 border-l border-indigo-500/10">Nama Usaha</th>
-                                <!-- KOLOM WA (BISA DICOPY & ADA ACTION) -->
+                                <!-- KOLOM NAMA (SEKARANG BISA DIBLOK & ADA ACTION) -->
+                                <th class="p-2 font-bold selectable text-indigo-300 border-l border-indigo-500/10">Nama Usaha</th>
+                                <!-- KOLOM WA (BISA DIBLOK & ADA ACTION) -->
                                 <th class="p-2 font-bold selectable text-indigo-300 border-r border-indigo-500/10">Kontak (WA)</th>
                                 <th class="p-2 font-bold text-center w-32 no-select">Aksi</th>
                             </tr>
@@ -221,7 +221,7 @@
         </div>
     </div>
 
-    <!-- MODAL CONTRIBUTION PROGRESS (NEW) -->
+    <!-- MODAL CONTRIBUTION PROGRESS -->
     <div id="progressModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
         <div class="glass p-8 rounded-2xl w-full max-w-5xl modal-enter border border-indigo-500/40 shadow-[0_0_100px_rgba(79,70,229,0.2)]">
             <div class="flex justify-between items-center mb-6">
@@ -253,13 +253,7 @@
             <!-- Heatmap -->
             <div class="bg-slate-900/80 border border-indigo-500/20 p-6 rounded-xl overflow-x-auto">
                 <h4 class="text-xs font-bold text-slate-400 mb-4 uppercase">Keaktifan Input Data (1 Tahun Terakhir)</h4>
-                
-                <!-- Grid Container -->
-                <div class="flex gap-1" id="contributionGraph">
-                    <!-- Grid akan digenerate via JS -->
-                </div>
-
-                <!-- Legend -->
+                <div class="flex gap-1" id="contributionGraph"></div>
                 <div class="flex items-center gap-2 mt-4 text-[10px] text-slate-500 justify-end">
                     <span>Less</span>
                     <div class="w-3 h-3 rounded-sm bg-slate-800 border border-slate-700"></div>
@@ -273,7 +267,7 @@
         </div>
     </div>
 
-    <!-- MODAL EDIT (Hidden) -->
+    <!-- MODAL EDIT -->
     <div id="editModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
         <div class="glass p-6 rounded-2xl w-full max-w-md modal-enter border border-indigo-500/40 shadow-[0_0_50px_rgba(79,70,229,0.3)]">
             <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">✏️ EDIT DATA MITRA</h3>
@@ -457,26 +451,42 @@
         document.getElementById('bulkMaps').addEventListener('input', function() { document.getElementById('countMaps').innerText = this.value.split('\n').filter(l=>l.trim()!=='').length; });
         document.getElementById('clearBtn').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('mitraForm').reset(); });
 
-        // === COPY INTERCEPTOR (HANYA WA) ===
+        // === SMART COPY INTERCEPTOR (SEPARATE COLUMNS) ===
         document.addEventListener('copy', function(e) {
             const selection = window.getSelection();
             if (selection.rangeCount === 0) return;
             const rows = document.querySelectorAll('#tableBody tr');
             let clipboardText = ""; let rowsCopied = 0;
+            
             rows.forEach(row => {
                 if (selection.containsNode(row, true)) {
-                    // CUMA AMBIL KOLOM WA (.col-wa)
-                    const wa = row.querySelector('.col-wa')?.innerText.trim().replace(/[\t\n\r]+/g, '');
-                    if(wa) { clipboardText += `${wa}\n`; rowsCopied++; }
+                    const nameCell = row.querySelector('.col-name');
+                    const waCell = row.querySelector('.col-wa');
+                    
+                    let lineParts = [];
+                    // Cek jika Kolom NAMA terpilih
+                    if (nameCell && selection.containsNode(nameCell, true)) {
+                         lineParts.push(nameCell.innerText.trim().replace(/[\t\n\r]+/g, ' '));
+                    }
+                    // Cek jika Kolom WA terpilih
+                    if (waCell && selection.containsNode(waCell, true)) {
+                         lineParts.push(waCell.innerText.trim().replace(/[\t\n\r]+/g, ''));
+                    }
+                    
+                    // Gabungkan jika (mungkin) user memblok 2 kolom sekaligus, tapi defaultnya terpisah
+                    if (lineParts.length > 0) {
+                        clipboardText += lineParts.join('\t') + '\n';
+                        rowsCopied++;
+                    }
                 }
             });
+
             if (rowsCopied > 0) { 
                 e.preventDefault(); 
                 e.clipboardData.setData('text/plain', clipboardText); 
-                
                 const btn = document.getElementById('totalDataCount');
                 const oldText = btn.innerText;
-                btn.innerText = `✅ Tersalin ${rowsCopied} WA!`;
+                btn.innerText = `✅ Tersalin ${rowsCopied} Data!`;
                 setTimeout(() => btn.innerText = oldText, 2500);
             }
         });
@@ -524,35 +534,31 @@
         window.deleteItem = async (id) => { if(confirm('Hapus?')) { await remove(ref(db, 'mitra/'+id)); loadData(); } };
         window.toggleStatus = async (id, s) => { await update(ref(db, 'mitra/'+id), {status: s==='contacted'?'new':'contacted'}); loadData(); };
         
-        // --- COPY 10 FUNCTIONALITY ---
-        window.copyBatch = async (startIndex, count, check) => {
-            // Ambil 10 data ke bawah dari index yang diklik
+        // --- COPY 10 FUNCTIONALITY (UPDATED: SUPPORT TYPE) ---
+        window.copyBatch = async (startIndex, count, check, type) => {
             const itemsToProcess = renderedItems.slice(startIndex, startIndex + count);
-            
             if (itemsToProcess.length === 0) return;
 
-            // 1. Copy to Clipboard
-            const textToCopy = itemsToProcess.map(item => item.wa_display).join('\n');
+            // Map content based on type ('name' or 'wa')
+            const textToCopy = itemsToProcess.map(item => {
+                if (type === 'name') return item.nama_usaha;
+                return item.wa_display; // default 'wa'
+            }).join('\n');
+            
             await navigator.clipboard.writeText(textToCopy);
             
-            // 2. Jika Copy & Check, update status di database
             if (check) {
                 const updates = {};
-                itemsToProcess.forEach(item => {
-                    updates[`mitra/${item.id}/status`] = 'contacted';
-                });
+                itemsToProcess.forEach(item => { updates[`mitra/${item.id}/status`] = 'contacted'; });
                 try {
                     await update(ref(db), updates);
-                    loadData(); // Refresh tampilan
+                    loadData(); 
                     alert(`✅ Berhasil copy & tandai ${itemsToProcess.length} data!`);
-                } catch(e) {
-                    alert('Gagal update status: ' + e.message);
-                }
+                } catch(e) { alert('Gagal update: ' + e.message); }
             } else {
-                // Hanya Copy
                 const btn = document.getElementById('totalDataCount');
                 const oldText = btn.innerText;
-                btn.innerText = `📋 Tersalin ${itemsToProcess.length} WA!`;
+                btn.innerText = `📋 Tersalin ${itemsToProcess.length} (${type === 'name' ? 'Nama' : 'WA'})!`;
                 setTimeout(() => btn.innerText = oldText, 2000);
             }
         };
@@ -641,7 +647,7 @@
                         const itemId = sanitizePhoneNumber(item.wa_display);
                         const dateStr = new Date(item.timestamp).toLocaleDateString('id-ID', {day:'numeric', month:'short'});
                         const timeStr = new Date(item.timestamp).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-                        const index = count - 1; // Index untuk fungsi copy batch
+                        const index = count - 1; 
 
                         tableBody.insertAdjacentHTML('beforeend', `
                             <tr id="row-${itemId}" class="${rowClass} hover:bg-indigo-600/10 border-b border-indigo-500/10 transition-colors group">
@@ -650,17 +656,24 @@
                                 <td class="p-2 text-center"><button onclick="toggleStatus('${itemId}','${item.status}')" class="w-6 h-6 rounded flex items-center justify-center transition-all ${btnClass}">${btnIcon}</button></td>
                                 <td class="p-2 text-[10px] text-indigo-300 whitespace-nowrap no-select">${dateStr} (${timeStr})</td>
                                 <td class="p-2 text-[10px] text-cyan-200 no-select max-w-[100px] truncate">${item.lokasi_wilayah||'-'}</td>
-                                <!-- KOLOM NAMA (NO-SELECT = TIDAK BISA DIBLOK) -->
-                                <td class="p-2 no-select col-name text-white font-bold text-[11px] border-l border-indigo-500/10 pl-3">${item.nama_usaha}</td>
                                 
-                                <!-- KOLOM WA (CONTAINER UNTUK HOVER BUTTONS) -->
-                                <td class="p-2 border-r border-indigo-500/10 pr-3 relative wa-cell-container group/wa">
+                                <!-- KOLOM NAMA (Sekarang Bisa Dicopy + Hover Action) -->
+                                <td class="p-2 selectable col-name text-white font-bold text-[11px] border-l border-indigo-500/10 pl-3 relative cell-container group/name">
+                                    ${item.nama_usaha}
+                                    <!-- HOVER ACTIONS NAMA -->
+                                    <div class="hover-actions absolute right-0 top-1/2 -translate-y-1/2 flex gap-1 z-10 bg-slate-900/90 p-1 rounded-lg border border-indigo-500/50 shadow-lg">
+                                        <button onclick="copyBatch(${index}, 10, false, 'name')" class="w-6 h-6 flex items-center justify-center bg-cyan-600 hover:bg-cyan-500 text-white rounded text-[9px] font-bold" title="Copy 10 Nama">📋</button>
+                                    </div>
+                                </td>
+                                
+                                <!-- KOLOM WA (Container untuk Hover Buttons) -->
+                                <td class="p-2 border-r border-indigo-500/10 pr-3 relative cell-container group/wa">
                                     <span class="selectable col-wa text-emerald-400 font-mono text-[10px] block">${item.wa_display}</span>
                                     
-                                    <!-- HOVER FLOATING ACTIONS -->
+                                    <!-- HOVER ACTIONS WA -->
                                     <div class="hover-actions absolute right-0 top-1/2 -translate-y-1/2 flex gap-1 z-10 bg-slate-900/90 p-1 rounded-lg border border-indigo-500/50 shadow-lg">
-                                        <button onclick="copyBatch(${index}, 10, false)" class="w-6 h-6 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[9px] font-bold" title="Copy 10 Baris">📋</button>
-                                        <button onclick="copyBatch(${index}, 10, true)" class="w-6 h-6 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[9px] font-bold" title="Copy & Cek 10 Baris">✅</button>
+                                        <button onclick="copyBatch(${index}, 10, false, 'wa')" class="w-6 h-6 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[9px] font-bold" title="Copy 10 WA">📋</button>
+                                        <button onclick="copyBatch(${index}, 10, true, 'wa')" class="w-6 h-6 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[9px] font-bold" title="Copy & Cek 10 WA">✅</button>
                                     </div>
                                 </td>
 
