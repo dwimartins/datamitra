@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mitra Database System v3.9</title>
+    <title>Mitra Database System v4.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -58,11 +58,11 @@
             pointer-events: none;
         }
 
-        /* Hover Actions Logic (General for both columns) */
-        .cell-container .hover-actions {
+        /* Hover Actions Logic */
+        .wa-cell-container .hover-actions {
             display: none;
         }
-        .cell-container:hover .hover-actions {
+        .wa-cell-container:hover .hover-actions {
             display: flex;
         }
     </style>
@@ -85,7 +85,7 @@
     <div class="max-w-[95%] mx-auto mb-4 flex justify-between items-center border-b border-indigo-500/30 pb-3">
         <div>
             <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 tracking-tighter">
-                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V3.9_INDEPENDENT_COPY</span>
+                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V4.0_UNIFIED_COPY</span>
             </h1>
             <p class="text-[10px] text-indigo-300/60">Mass Data Injection & Verification Protocol</p>
         </div>
@@ -202,9 +202,9 @@
                                 <th class="p-2 font-bold text-center w-12 no-select">Sts</th>
                                 <th class="p-2 font-bold whitespace-nowrap no-select">Waktu</th>
                                 <th class="p-2 font-bold no-select">Lokasi</th>
-                                <!-- KOLOM NAMA (SEKARANG BISA DIBLOK & ADA ACTION) -->
+                                <!-- KOLOM NAMA -->
                                 <th class="p-2 font-bold selectable text-indigo-300 border-l border-indigo-500/10">Nama Usaha</th>
-                                <!-- KOLOM WA (BISA DIBLOK & ADA ACTION) -->
+                                <!-- KOLOM WA (TOMBOL COPY UNIFIED DISINI) -->
                                 <th class="p-2 font-bold selectable text-indigo-300 border-r border-indigo-500/10">Kontak (WA)</th>
                                 <th class="p-2 font-bold text-center w-32 no-select">Aksi</th>
                             </tr>
@@ -302,7 +302,7 @@
         let renderedItems = []; 
         let selectedIds = new Set();
         let lastCheckedIndex = null;
-        let allDataCache = []; // Cache semua data untuk keperluan statistik
+        let allDataCache = []; 
 
         // --- UTILITIES ---
         function sanitizePhoneNumber(phone) { if(!phone) return ""; return phone.replace(/\D/g, ''); }
@@ -366,87 +366,62 @@
         // --- PROGRESS & CONTRIBUTION GRAPH ---
         window.openProgressModal = async () => {
             document.getElementById('progressModal').classList.remove('hidden');
-            
-            // Hitung Statistik
             const today = new Date();
             let weekCount = 0, monthCount = 0, yearCount = 0;
-            const contributions = {}; // Map: "YYYY-MM-DD" -> Count
+            const contributions = {};
 
-            // Gunakan cache data yang sudah diload
             allDataCache.forEach(item => {
                 const date = new Date(item.timestamp);
                 const dateStr = date.toISOString().split('T')[0];
-                
-                // Isi Map Contribution
                 contributions[dateStr] = (contributions[dateStr] || 0) + 1;
-
-                // Hitung Counter
                 const diffTime = Math.abs(today - date);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                
                 if (diffDays <= 7) weekCount++;
                 if (date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()) monthCount++;
                 if (date.getFullYear() === today.getFullYear()) yearCount++;
             });
 
-            // Update Angka
             document.getElementById('statWeek').innerText = weekCount;
             document.getElementById('statMonth').innerText = monthCount;
             document.getElementById('statYear').innerText = yearCount;
-
-            // Render Grid Heatmap (52 Weeks x 7 Days)
             renderContributionGraph(contributions);
         };
 
         function renderContributionGraph(dataMap) {
             const graph = document.getElementById('contributionGraph');
             graph.innerHTML = '';
-            
-            // Kita butuh 52 minggu ke belakang dari hari ini
             const today = new Date();
             const startDate = new Date();
             startDate.setDate(today.getDate() - 365);
-            
-            // Loop 52 minggu (kolom)
             for (let w = 0; w < 53; w++) {
                 const col = document.createElement('div');
                 col.className = 'flex flex-col gap-1';
-                
-                // Loop 7 hari (baris) per minggu
                 for (let d = 0; d < 7; d++) {
                     const cellDate = new Date(startDate);
                     cellDate.setDate(startDate.getDate() + (w * 7) + d);
-                    
                     const dateStr = cellDate.toISOString().split('T')[0];
                     const count = dataMap[dateStr] || 0;
-                    
-                    // Tentukan Warna
-                    let colorClass = 'bg-slate-800 border-slate-700'; // 0 data
+                    let colorClass = 'bg-slate-800 border-slate-700'; 
                     if (count > 0) colorClass = 'bg-indigo-900 border-indigo-800';
                     if (count > 5) colorClass = 'bg-indigo-700 border-indigo-600';
                     if (count > 15) colorClass = 'bg-indigo-500 border-indigo-400';
                     if (count > 30) colorClass = 'bg-cyan-400 shadow-[0_0_5px_cyan] border-cyan-300';
-
                     const cell = document.createElement('div');
                     cell.className = `w-3 h-3 rounded-sm border ${colorClass} relative contrib-cell transition-all hover:scale-125 hover:z-20`;
                     cell.setAttribute('data-title', `${dateStr}: ${count} data`);
-                    
                     col.appendChild(cell);
                 }
                 graph.appendChild(col);
             }
         }
 
-        // --- FILTER DATE RANGE ---
         window.applyDateFilter = () => loadData();
-        
         window.resetTo3Days = () => {
             document.getElementById('filterStartDate').value = '';
             document.getElementById('filterEndDate').value = '';
             loadData();
         };
 
-        // --- STANDARD LOGIC ---
         document.getElementById('smartRawData').addEventListener('input', function() { document.getElementById('countRaw').innerText = this.value.split('\n').filter(l=>l.trim()!=='').length; });
         document.getElementById('bulkMaps').addEventListener('input', function() { document.getElementById('countMaps').innerText = this.value.split('\n').filter(l=>l.trim()!=='').length; });
         document.getElementById('clearBtn').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('mitraForm').reset(); });
@@ -462,22 +437,10 @@
                 if (selection.containsNode(row, true)) {
                     const nameCell = row.querySelector('.col-name');
                     const waCell = row.querySelector('.col-wa');
-                    
                     let lineParts = [];
-                    // Cek jika Kolom NAMA terpilih
-                    if (nameCell && selection.containsNode(nameCell, true)) {
-                         lineParts.push(nameCell.innerText.trim().replace(/[\t\n\r]+/g, ' '));
-                    }
-                    // Cek jika Kolom WA terpilih
-                    if (waCell && selection.containsNode(waCell, true)) {
-                         lineParts.push(waCell.innerText.trim().replace(/[\t\n\r]+/g, ''));
-                    }
-                    
-                    // Gabungkan jika (mungkin) user memblok 2 kolom sekaligus, tapi defaultnya terpisah
-                    if (lineParts.length > 0) {
-                        clipboardText += lineParts.join('\t') + '\n';
-                        rowsCopied++;
-                    }
+                    if (nameCell && selection.containsNode(nameCell, true)) lineParts.push(nameCell.innerText.trim().replace(/[\t\n\r]+/g, ' '));
+                    if (waCell && selection.containsNode(waCell, true)) lineParts.push(waCell.innerText.trim().replace(/[\t\n\r]+/g, ''));
+                    if (lineParts.length > 0) { clipboardText += lineParts.join('\t') + '\n'; rowsCopied++; }
                 }
             });
 
@@ -534,15 +497,14 @@
         window.deleteItem = async (id) => { if(confirm('Hapus?')) { await remove(ref(db, 'mitra/'+id)); loadData(); } };
         window.toggleStatus = async (id, s) => { await update(ref(db, 'mitra/'+id), {status: s==='contacted'?'new':'contacted'}); loadData(); };
         
-        // --- COPY 10 FUNCTIONALITY (UPDATED: SUPPORT TYPE) ---
-        window.copyBatch = async (startIndex, count, check, type) => {
+        // --- COPY 10 FUNCTIONALITY (UNIFIED) ---
+        window.copyBatch = async (startIndex, count, check) => {
             const itemsToProcess = renderedItems.slice(startIndex, startIndex + count);
             if (itemsToProcess.length === 0) return;
 
-            // Map content based on type ('name' or 'wa')
+            // Map content: Nama + Tab + WA
             const textToCopy = itemsToProcess.map(item => {
-                if (type === 'name') return item.nama_usaha;
-                return item.wa_display; // default 'wa'
+                return `${item.nama_usaha}\t${item.wa_display}`;
             }).join('\n');
             
             await navigator.clipboard.writeText(textToCopy);
@@ -558,7 +520,7 @@
             } else {
                 const btn = document.getElementById('totalDataCount');
                 const oldText = btn.innerText;
-                btn.innerText = `📋 Tersalin ${itemsToProcess.length} (${type === 'name' ? 'Nama' : 'WA'})!`;
+                btn.innerText = `📋 Tersalin ${itemsToProcess.length} (Nama & WA)!`;
                 setTimeout(() => btn.innerText = oldText, 2000);
             }
         };
@@ -566,7 +528,6 @@
         // --- DATA LOADING & FILTERING ---
         document.getElementById('mitraForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            // ... (Kode submit sama seperti v3.6, diringkas) ...
             const btn = document.getElementById('btnSubmit'); btn.disabled=true;
             const rawLines = document.getElementById('smartRawData').value.split('\n').filter(l=>l.trim());
             const mapsLines = document.getElementById('bulkMaps').value.split('\n').filter(l=>l.trim());
@@ -609,7 +570,6 @@
                     const data = snapshot.val();
                     allDataCache = Object.values(data); // Simpan ke cache untuk statistik
                     
-                    // Filtering
                     let filtered = allDataCache.sort((a,b) => b.timestamp - a.timestamp);
                     const threeDaysAgo = new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate()-3); threeDaysAgo.setHours(0,0,0,0);
 
@@ -622,7 +582,6 @@
                         filtered = filtered.filter(i => new Date(i.timestamp) >= threeDaysAgo);
                     }
 
-                    // Render Table
                     if(filtered.length === 0) { tableBody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-500">Tidak ada data.</td></tr>`; return; }
                     
                     const batches = {};
@@ -634,7 +593,6 @@
                         renderedItems.push(item);
                         renderedItems[count-1].id = sanitizePhoneNumber(item.wa_display);
                         
-                        // Batch Logic
                         if(item.batch_id) {
                             if(!batches[item.batch_id]) batches[item.batch_id] = {count:0, time: item.timestamp};
                             batches[item.batch_id].count++;
@@ -657,23 +615,16 @@
                                 <td class="p-2 text-[10px] text-indigo-300 whitespace-nowrap no-select">${dateStr} (${timeStr})</td>
                                 <td class="p-2 text-[10px] text-cyan-200 no-select max-w-[100px] truncate">${item.lokasi_wilayah||'-'}</td>
                                 
-                                <!-- KOLOM NAMA (Sekarang Bisa Dicopy + Hover Action) -->
-                                <td class="p-2 selectable col-name text-white font-bold text-[11px] border-l border-indigo-500/10 pl-3 relative cell-container group/name">
-                                    ${item.nama_usaha}
-                                    <!-- HOVER ACTIONS NAMA -->
-                                    <div class="hover-actions absolute right-0 top-1/2 -translate-y-1/2 flex gap-1 z-10 bg-slate-900/90 p-1 rounded-lg border border-indigo-500/50 shadow-lg">
-                                        <button onclick="copyBatch(${index}, 10, false, 'name')" class="w-6 h-6 flex items-center justify-center bg-cyan-600 hover:bg-cyan-500 text-white rounded text-[9px] font-bold" title="Copy 10 Nama">📋</button>
-                                    </div>
-                                </td>
+                                <td class="p-2 selectable col-name text-white font-bold text-[11px] border-l border-indigo-500/10 pl-3">${item.nama_usaha}</td>
                                 
                                 <!-- KOLOM WA (Container untuk Hover Buttons) -->
-                                <td class="p-2 border-r border-indigo-500/10 pr-3 relative cell-container group/wa">
+                                <td class="p-2 border-r border-indigo-500/10 pr-3 relative wa-cell-container group/wa">
                                     <span class="selectable col-wa text-emerald-400 font-mono text-[10px] block">${item.wa_display}</span>
                                     
-                                    <!-- HOVER ACTIONS WA -->
+                                    <!-- HOVER ACTIONS (UNIFIED) -->
                                     <div class="hover-actions absolute right-0 top-1/2 -translate-y-1/2 flex gap-1 z-10 bg-slate-900/90 p-1 rounded-lg border border-indigo-500/50 shadow-lg">
-                                        <button onclick="copyBatch(${index}, 10, false, 'wa')" class="w-6 h-6 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[9px] font-bold" title="Copy 10 WA">📋</button>
-                                        <button onclick="copyBatch(${index}, 10, true, 'wa')" class="w-6 h-6 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[9px] font-bold" title="Copy & Cek 10 WA">✅</button>
+                                        <button onclick="copyBatch(${index}, 10, false)" class="w-6 h-6 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[9px] font-bold" title="Copy 10 Baris (Nama & WA)">📋</button>
+                                        <button onclick="copyBatch(${index}, 10, true)" class="w-6 h-6 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[9px] font-bold" title="Copy & Cek 10 Baris (Nama & WA)">✅</button>
                                     </div>
                                 </td>
 
@@ -685,7 +636,6 @@
                         `);
                     });
 
-                    // Render Batches
                     const batchKeys = Object.keys(batches).sort((a,b)=>b-a);
                     if(batchKeys.length) {
                         batchKeys.forEach(bid => {
