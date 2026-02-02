@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mitra Database System v4.0</title>
+    <title>Mitra Database System v4.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -29,6 +29,9 @@
         .row-contacted { opacity: 0.6; background: rgba(16, 185, 129, 0.05); } 
         .row-new { background: rgba(239, 68, 68, 0.02); }
         .row-selected { background: rgba(99, 102, 241, 0.2) !important; border-left: 2px solid #6366f1; }
+        
+        /* Invalid WA Style */
+        .wa-invalid { color: #ef4444 !important; text-decoration: line-through; opacity: 0.7; }
 
         /* Helpers */
         .no-select { user-select: none; cursor: default; }
@@ -40,29 +43,11 @@
         .tab-active { border-bottom: 2px solid #6366f1; color: white; }
         .tab-inactive { color: #94a3b8; border-bottom: 2px solid transparent; }
 
-        /* Contribution Grid Tooltip */
-        .contrib-cell:hover::after {
-            content: attr(data-title);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1e293b;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            white-space: nowrap;
-            z-index: 10;
-            border: 1px solid #4f46e5;
-            pointer-events: none;
-        }
-
         /* Hover Actions Logic */
-        .wa-cell-container .hover-actions {
+        .cell-container .hover-actions {
             display: none;
         }
-        .wa-cell-container:hover .hover-actions {
+        .cell-container:hover .hover-actions {
             display: flex;
         }
     </style>
@@ -85,7 +70,7 @@
     <div class="max-w-[95%] mx-auto mb-4 flex justify-between items-center border-b border-indigo-500/30 pb-3">
         <div>
             <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 tracking-tighter">
-                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V4.0_UNIFIED_COPY</span>
+                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V4.3_GLOBAL_SEARCH</span>
             </h1>
             <p class="text-[10px] text-indigo-300/60">Mass Data Injection & Verification Protocol</p>
         </div>
@@ -106,7 +91,7 @@
         <!-- BAGIAN 1: INPUT & SIDE PANEL (TABS) -->
         <div class="w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <!-- FORM INPUT (2/3 Layar) -->
+            <!-- FORM INPUT -->
             <div class="lg:col-span-2 glass p-5 rounded-xl shadow-2xl shadow-indigo-900/20 relative overflow-hidden group">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-sm font-bold text-white flex items-center gap-2">
@@ -140,16 +125,16 @@
                 <div id="statusBox" class="mt-3 p-3 rounded-lg text-[10px] font-mono hidden max-h-32 overflow-y-auto border shadow-inner"></div>
             </div>
 
-            <!-- RIGHT PANEL: TABS (DEFAULT: NOTES) -->
+            <!-- RIGHT PANEL: TABS -->
             <div class="lg:col-span-1 glass p-5 rounded-xl border border-indigo-500/20 flex flex-col h-full min-h-[450px]">
                 
-                <!-- Tab Headers (Notes First) -->
+                <!-- Tab Headers -->
                 <div class="flex border-b border-indigo-500/30 mb-4">
                     <button onclick="switchTab('notes')" id="tabNotes" class="flex-1 py-2 text-[10px] uppercase font-bold transition-all tab-active">DAILY NOTES</button>
                     <button onclick="switchTab('batch')" id="tabBatch" class="flex-1 py-2 text-[10px] uppercase font-bold transition-all tab-inactive">BATCH HISTORY</button>
                 </div>
 
-                <!-- Content 1: Daily Notes (Default Visible) -->
+                <!-- Content 1: Daily Notes -->
                 <div id="panelNotes" class="flex-1 flex flex-col overflow-hidden">
                     <form id="noteForm" class="mb-3 flex gap-2">
                         <input type="text" id="noteInput" required placeholder="Tulis catatan harian..." 
@@ -161,7 +146,7 @@
                     </div>
                 </div>
 
-                <!-- Content 2: Batch List (Hidden) -->
+                <!-- Content 2: Batch List -->
                 <div id="panelBatch" class="hidden flex-1 flex flex-col overflow-hidden">
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-[9px] text-indigo-400 uppercase">Input History</span>
@@ -175,7 +160,7 @@
             </div>
         </div>
 
-        <!-- BAGIAN 2: DATABASE VIEW (RANGE FILTER) -->
+        <!-- BAGIAN 2: DATABASE VIEW (SEARCH & FILTER) -->
         <div class="w-full">
             <div class="glass p-5 rounded-xl min-h-[500px] flex flex-col border border-indigo-500/20">
                 <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-4 gap-4">
@@ -183,13 +168,26 @@
                         <h2 class="text-sm font-bold text-white tracking-wide">DATABASE MONITOR</h2>
                         <p class="text-[10px] text-indigo-300/60" id="viewModeText">Menampilkan data 3 hari terakhir</p>
                     </div>
-                    <div class="flex flex-wrap items-center gap-2 justify-end bg-slate-900/50 p-1.5 rounded-lg border border-indigo-500/30">
-                        <span class="text-[10px] text-indigo-300 uppercase font-bold ml-1">Range:</span>
-                        <input type="date" id="filterStartDate" class="bg-slate-800 border border-indigo-500/30 rounded p-1 text-xs text-white focus:outline-none focus:border-cyan-500 shadow-inner w-28">
-                        <span class="text-slate-500 text-xs">-</span>
-                        <input type="date" id="filterEndDate" class="bg-slate-800 border border-indigo-500/30 rounded p-1 text-xs text-white focus:outline-none focus:border-cyan-500 shadow-inner w-28">
-                        <button onclick="applyDateFilter()" class="text-[10px] bg-indigo-600 px-3 py-1 rounded hover:bg-indigo-500 text-white transition-colors shadow-lg">Cari</button>
-                        <button onclick="resetTo3Days()" class="text-[10px] bg-slate-700 px-3 py-1 rounded hover:bg-slate-600 text-white transition-colors ml-1">Reset</button>
+                    
+                    <div class="flex flex-col items-end gap-2">
+                        <!-- GLOBAL SEARCH BAR (NEW) -->
+                        <div class="relative group w-full md:w-64">
+                            <input type="text" id="globalSearch" placeholder="Cari No. WA (Global)..." 
+                                class="w-full bg-slate-900 border border-indigo-500/30 rounded-lg p-2 pl-8 text-xs text-white focus:outline-none focus:border-cyan-400 placeholder-slate-600 transition-all shadow-inner"
+                                onkeypress="if(event.key==='Enter') searchData()">
+                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs">🔍</span>
+                            <button onclick="searchData()" class="absolute right-1 top-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-indigo-500 text-white p-1 rounded text-[10px] px-2 transition-all">CARI</button>
+                        </div>
+
+                        <!-- DATE FILTER -->
+                        <div class="flex flex-wrap items-center gap-2 justify-end bg-slate-900/50 p-1.5 rounded-lg border border-indigo-500/30">
+                            <span class="text-[10px] text-indigo-300 uppercase font-bold ml-1">Range:</span>
+                            <input type="date" id="filterStartDate" class="bg-slate-800 border border-indigo-500/30 rounded p-1 text-xs text-white focus:outline-none focus:border-cyan-500 shadow-inner w-28">
+                            <span class="text-slate-500 text-xs">-</span>
+                            <input type="date" id="filterEndDate" class="bg-slate-800 border border-indigo-500/30 rounded p-1 text-xs text-white focus:outline-none focus:border-cyan-500 shadow-inner w-28">
+                            <button onclick="applyDateFilter()" class="text-[10px] bg-indigo-600 px-3 py-1 rounded hover:bg-indigo-500 text-white transition-colors shadow-lg">Cari</button>
+                            <button onclick="resetTo3Days()" class="text-[10px] bg-slate-700 px-3 py-1 rounded hover:bg-slate-600 text-white transition-colors ml-1">Reset</button>
+                        </div>
                     </div>
                 </div>
 
@@ -202,10 +200,10 @@
                                 <th class="p-2 font-bold text-center w-12 no-select">Sts</th>
                                 <th class="p-2 font-bold whitespace-nowrap no-select">Waktu</th>
                                 <th class="p-2 font-bold no-select">Lokasi</th>
-                                <!-- KOLOM NAMA -->
-                                <th class="p-2 font-bold selectable text-indigo-300 border-l border-indigo-500/10">Nama Usaha</th>
-                                <!-- KOLOM WA (TOMBOL COPY UNIFIED DISINI) -->
-                                <th class="p-2 font-bold selectable text-indigo-300 border-r border-indigo-500/10">Kontak (WA)</th>
+                                <!-- KOLOM WA (KIRI) -->
+                                <th class="p-2 font-bold selectable text-indigo-300 border-l border-indigo-500/10">Kontak (WA)</th>
+                                <!-- KOLOM NAMA (KANAN) -->
+                                <th class="p-2 font-bold selectable text-indigo-300 border-r border-indigo-500/10">Nama Usaha</th>
                                 <th class="p-2 font-bold text-center w-32 no-select">Aksi</th>
                             </tr>
                         </thead>
@@ -231,7 +229,6 @@
                 <button onclick="document.getElementById('progressModal').classList.add('hidden')" class="text-slate-400 hover:text-white text-2xl">&times;</button>
             </div>
 
-            <!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 <div class="bg-indigo-900/30 border border-indigo-500/30 p-4 rounded-xl text-center">
                     <div class="text-[10px] text-indigo-300 uppercase tracking-widest mb-1">7 HARI TERAKHIR</div>
@@ -250,7 +247,6 @@
                 </div>
             </div>
 
-            <!-- Heatmap -->
             <div class="bg-slate-900/80 border border-indigo-500/20 p-6 rounded-xl overflow-x-auto">
                 <h4 class="text-xs font-bold text-slate-400 mb-4 uppercase">Keaktifan Input Data (1 Tahun Terakhir)</h4>
                 <div class="flex gap-1" id="contributionGraph"></div>
@@ -308,6 +304,96 @@
         function sanitizePhoneNumber(phone) { if(!phone) return ""; return phone.replace(/\D/g, ''); }
         function getTodayDate() { return new Date().toISOString().split('T')[0]; }
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID'); }, 1000);
+
+        // --- GLOBAL SEARCH ---
+        window.searchData = async () => {
+            const input = document.getElementById('globalSearch');
+            const rawVal = input.value.trim();
+            if(!rawVal) return;
+            
+            const waId = sanitizePhoneNumber(rawVal);
+            if(!waId) { alert('Format nomor tidak valid'); return; }
+
+            const tableBody = document.getElementById('tableBody');
+            document.getElementById('viewModeText').innerText = `Mencari: ${rawVal}...`;
+            tableBody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-indigo-400 animate-pulse">Searching Database...</td></tr>`;
+
+            try {
+                // Direct lookup (Super Fast)
+                const snapshot = await get(child(ref(db), `mitra/${waId}`));
+                
+                renderedItems = []; selectedIds.clear(); updateActionBar();
+                document.getElementById('batchListContainer').innerHTML = '<p class="text-[10px] text-slate-500 italic text-center mt-4">Mode Pencarian.</p>';
+
+                if(snapshot.exists()) {
+                    const item = snapshot.val();
+                    renderedItems.push(item);
+                    renderedItems[0].id = waId;
+                    
+                    document.getElementById('totalDataCount').innerText = `Ditemukan: 1`;
+                    document.getElementById('viewModeText').innerText = `Hasil Pencarian: ${item.wa_display}`;
+                    
+                    tableBody.innerHTML = '';
+                    const rowHtml = generateRowHtml(item, 1, 0); // Use helper function
+                    tableBody.insertAdjacentHTML('beforeend', rowHtml);
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-red-400">Data tidak ditemukan di database.</td></tr>`;
+                    document.getElementById('totalDataCount').innerText = `Total: 0`;
+                }
+            } catch(e) {
+                console.error(e);
+                tableBody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-400">Error: ${e.message}</td></tr>`;
+            }
+        };
+
+        // --- ROW GENERATOR HELPER ---
+        function generateRowHtml(item, count, index) {
+            const dateObj = new Date(item.timestamp);
+            const dateStr = dateObj.toLocaleDateString('id-ID', {day:'numeric', month:'short'});
+            const timeStr = dateObj.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+            
+            const isContacted = item.status === 'contacted';
+            const isInvalid = item.is_invalid === true; 
+            const rowClass = isContacted ? 'row-contacted' : 'row-new';
+            const btnIcon = isContacted ? '✓' : '✕';
+            const btnClass = isContacted ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/10 text-red-400 hover:bg-emerald-500 hover:text-white hover:content-["✓"]';
+            const itemId = sanitizePhoneNumber(item.wa_display);
+            const waClass = isInvalid ? 'wa-invalid' : 'text-emerald-400';
+
+            return `
+                <tr id="row-${itemId}" class="${rowClass} hover:bg-indigo-600/10 border-b border-indigo-500/10 transition-colors group">
+                    <td class="p-2 text-center"><input type="checkbox" id="cb-${itemId}" onclick="toggleSelect('${itemId}', ${index}, event)"></td>
+                    <td class="p-2 text-center text-slate-500 text-[10px] no-select">${count}</td>
+                    <td class="p-2 text-center"><button onclick="toggleStatus('${itemId}','${item.status}')" class="w-6 h-6 rounded flex items-center justify-center transition-all ${btnClass}">${btnIcon}</button></td>
+                    <td class="p-2 text-[10px] text-indigo-300 whitespace-nowrap no-select">${dateStr} (${timeStr})</td>
+                    <td class="p-2 text-[10px] text-cyan-200 no-select max-w-[100px] truncate">${item.lokasi_wilayah||'-'}</td>
+                    
+                    <!-- KOLOM WA (KIRI) -->
+                    <td class="p-2 border-l border-indigo-500/10 pl-3 relative cell-container group/wa">
+                        <span class="selectable col-wa ${waClass} font-mono text-[10px] block">${item.wa_display}</span>
+                        <div class="hover-actions absolute right-0 top-1/2 -translate-y-1/2 flex gap-1 z-10 bg-slate-900/90 p-1 rounded-lg border border-indigo-500/50 shadow-lg">
+                            <button onclick="openEditModal('${itemId}')" class="w-6 h-6 flex items-center justify-center bg-yellow-600 hover:bg-yellow-500 text-white rounded text-[9px] font-bold" title="Edit Data">✏️</button>
+                            <button onclick="toggleInvalid('${itemId}', ${isInvalid})" class="w-6 h-6 flex items-center justify-center bg-red-600 hover:bg-red-500 text-white rounded text-[9px] font-bold" title="Tandai WA Salah">⚠️</button>
+                        </div>
+                    </td>
+
+                    <!-- KOLOM NAMA (KANAN) -->
+                    <td class="p-2 selectable col-name text-white font-bold text-[11px] border-r border-indigo-500/10 pr-3 relative cell-container group/name">
+                        ${item.nama_usaha}
+                        <div class="hover-actions absolute right-0 top-1/2 -translate-y-1/2 flex gap-1 z-10 bg-slate-900/90 p-1 rounded-lg border border-indigo-500/50 shadow-lg">
+                            <button onclick="copyBatch(${index}, 10, false)" class="w-6 h-6 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[9px] font-bold" title="Copy 10 (Nama+WA)">📋</button>
+                            <button onclick="copyBatch(${index}, 10, true)" class="w-6 h-6 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[9px] font-bold" title="Copy & Cek 10">✅</button>
+                            <button onclick="openEditModal('${itemId}')" class="w-6 h-6 flex items-center justify-center bg-yellow-600 hover:bg-yellow-500 text-white rounded text-[9px] font-bold" title="Edit Data">✏️</button>
+                        </div>
+                    </td>
+
+                    <td class="p-2 text-center flex justify-center gap-2 no-select">
+                        <a href="${item.maps}" target="_blank" class="w-6 h-6 rounded bg-indigo-500/20 text-indigo-300 flex items-center justify-center hover:bg-indigo-500 hover:text-white">➤</a>
+                        <button onclick="deleteItem('${itemId}')" class="w-6 h-6 rounded bg-red-500/20 text-red-300 flex items-center justify-center hover:bg-red-500 hover:text-white">🗑</button>
+                    </td>
+                </tr>
+            `;
+        }
 
         // --- TAB SWITCHING ---
         window.switchTab = (tabName) => {
@@ -426,7 +512,7 @@
         document.getElementById('bulkMaps').addEventListener('input', function() { document.getElementById('countMaps').innerText = this.value.split('\n').filter(l=>l.trim()!=='').length; });
         document.getElementById('clearBtn').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('mitraForm').reset(); });
 
-        // === SMART COPY INTERCEPTOR (SEPARATE COLUMNS) ===
+        // === SMART COPY INTERCEPTOR ===
         document.addEventListener('copy', function(e) {
             const selection = window.getSelection();
             if (selection.rangeCount === 0) return;
@@ -438,9 +524,19 @@
                     const nameCell = row.querySelector('.col-name');
                     const waCell = row.querySelector('.col-wa');
                     let lineParts = [];
+                    // Urutan: Nama [Tab] WA
                     if (nameCell && selection.containsNode(nameCell, true)) lineParts.push(nameCell.innerText.trim().replace(/[\t\n\r]+/g, ' '));
                     if (waCell && selection.containsNode(waCell, true)) lineParts.push(waCell.innerText.trim().replace(/[\t\n\r]+/g, ''));
-                    if (lineParts.length > 0) { clipboardText += lineParts.join('\t') + '\n'; rowsCopied++; }
+                    
+                    if (lineParts.length > 0) { 
+                        // Logic Gabung jika blok row (Nama di Kanan, WA di Kiri, tapi output Nama -> WA)
+                        if(lineParts.length === 2 && selection.containsNode(waCell, true) && selection.containsNode(nameCell, true)) {
+                             clipboardText += `${lineParts[0]}\t${lineParts[1]}\n`; 
+                        } else {
+                             clipboardText += lineParts.join('\t') + '\n'; 
+                        }
+                        rowsCopied++; 
+                    }
                 }
             });
 
@@ -496,27 +592,17 @@
 
         window.deleteItem = async (id) => { if(confirm('Hapus?')) { await remove(ref(db, 'mitra/'+id)); loadData(); } };
         window.toggleStatus = async (id, s) => { await update(ref(db, 'mitra/'+id), {status: s==='contacted'?'new':'contacted'}); loadData(); };
-        
-        // --- COPY 10 FUNCTIONALITY (UNIFIED) ---
+        window.toggleInvalid = async (id, currentVal) => { try { await update(ref(db, 'mitra/'+id), { is_invalid: !currentVal }); loadData(); } catch(e) { alert('Gagal update invalid: ' + e.message); } };
+
         window.copyBatch = async (startIndex, count, check) => {
             const itemsToProcess = renderedItems.slice(startIndex, startIndex + count);
             if (itemsToProcess.length === 0) return;
-
-            // Map content: Nama + Tab + WA
-            const textToCopy = itemsToProcess.map(item => {
-                return `${item.nama_usaha}\t${item.wa_display}`;
-            }).join('\n');
-            
+            const textToCopy = itemsToProcess.map(item => `${item.nama_usaha}\t${item.wa_display}`).join('\n');
             await navigator.clipboard.writeText(textToCopy);
-            
             if (check) {
                 const updates = {};
                 itemsToProcess.forEach(item => { updates[`mitra/${item.id}/status`] = 'contacted'; });
-                try {
-                    await update(ref(db), updates);
-                    loadData(); 
-                    alert(`✅ Berhasil copy & tandai ${itemsToProcess.length} data!`);
-                } catch(e) { alert('Gagal update: ' + e.message); }
+                try { await update(ref(db), updates); loadData(); alert(`✅ Berhasil copy & tandai ${itemsToProcess.length} data!`); } catch(e) { alert('Gagal update: ' + e.message); }
             } else {
                 const btn = document.getElementById('totalDataCount');
                 const oldText = btn.innerText;
@@ -525,7 +611,6 @@
             }
         };
 
-        // --- DATA LOADING & FILTERING ---
         document.getElementById('mitraForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit'); btn.disabled=true;
@@ -563,12 +648,12 @@
 
             try {
                 const snapshot = await get(ref(db, 'mitra'));
-                allDataCache = []; // Reset Global Cache
+                allDataCache = []; 
                 renderedItems = []; selectedIds.clear(); updateActionBar(); batchList.innerHTML = '';
 
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    allDataCache = Object.values(data); // Simpan ke cache untuk statistik
+                    allDataCache = Object.values(data); 
                     
                     let filtered = allDataCache.sort((a,b) => b.timestamp - a.timestamp);
                     const threeDaysAgo = new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate()-3); threeDaysAgo.setHours(0,0,0,0);
@@ -597,43 +682,10 @@
                             if(!batches[item.batch_id]) batches[item.batch_id] = {count:0, time: item.timestamp};
                             batches[item.batch_id].count++;
                         }
-
-                        const isContacted = item.status === 'contacted';
-                        const rowClass = isContacted ? 'row-contacted' : 'row-new';
-                        const btnIcon = isContacted ? '✓' : '✕';
-                        const btnClass = isContacted ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/10 text-red-400 hover:bg-emerald-500 hover:text-white hover:content-["✓"]';
-                        const itemId = sanitizePhoneNumber(item.wa_display);
-                        const dateStr = new Date(item.timestamp).toLocaleDateString('id-ID', {day:'numeric', month:'short'});
-                        const timeStr = new Date(item.timestamp).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-                        const index = count - 1; 
-
-                        tableBody.insertAdjacentHTML('beforeend', `
-                            <tr id="row-${itemId}" class="${rowClass} hover:bg-indigo-600/10 border-b border-indigo-500/10 transition-colors group">
-                                <td class="p-2 text-center"><input type="checkbox" id="cb-${itemId}" onclick="toggleSelect('${itemId}', ${index}, event)"></td>
-                                <td class="p-2 text-center text-slate-500 text-[10px] no-select">${count}</td>
-                                <td class="p-2 text-center"><button onclick="toggleStatus('${itemId}','${item.status}')" class="w-6 h-6 rounded flex items-center justify-center transition-all ${btnClass}">${btnIcon}</button></td>
-                                <td class="p-2 text-[10px] text-indigo-300 whitespace-nowrap no-select">${dateStr} (${timeStr})</td>
-                                <td class="p-2 text-[10px] text-cyan-200 no-select max-w-[100px] truncate">${item.lokasi_wilayah||'-'}</td>
-                                
-                                <td class="p-2 selectable col-name text-white font-bold text-[11px] border-l border-indigo-500/10 pl-3">${item.nama_usaha}</td>
-                                
-                                <!-- KOLOM WA (Container untuk Hover Buttons) -->
-                                <td class="p-2 border-r border-indigo-500/10 pr-3 relative wa-cell-container group/wa">
-                                    <span class="selectable col-wa text-emerald-400 font-mono text-[10px] block">${item.wa_display}</span>
-                                    
-                                    <!-- HOVER ACTIONS (UNIFIED) -->
-                                    <div class="hover-actions absolute right-0 top-1/2 -translate-y-1/2 flex gap-1 z-10 bg-slate-900/90 p-1 rounded-lg border border-indigo-500/50 shadow-lg">
-                                        <button onclick="copyBatch(${index}, 10, false)" class="w-6 h-6 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[9px] font-bold" title="Copy 10 Baris (Nama & WA)">📋</button>
-                                        <button onclick="copyBatch(${index}, 10, true)" class="w-6 h-6 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[9px] font-bold" title="Copy & Cek 10 Baris (Nama & WA)">✅</button>
-                                    </div>
-                                </td>
-
-                                <td class="p-2 text-center flex justify-center gap-2 no-select">
-                                    <a href="${item.maps}" target="_blank" class="w-6 h-6 rounded bg-indigo-500/20 text-indigo-300 flex items-center justify-center hover:bg-indigo-500 hover:text-white">➤</a>
-                                    <button onclick="deleteItem('${itemId}')" class="w-6 h-6 rounded bg-red-500/20 text-red-300 flex items-center justify-center hover:bg-red-500 hover:text-white">🗑</button>
-                                </td>
-                            </tr>
-                        `);
+                        
+                        // Pass index explicitly
+                        const rowHtml = generateRowHtml(item, count, count - 1);
+                        tableBody.insertAdjacentHTML('beforeend', rowHtml);
                     });
 
                     const batchKeys = Object.keys(batches).sort((a,b)=>b-a);
