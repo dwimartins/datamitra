@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mitra Database System v4.9</title>
+    <title>Mitra Database System v5.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -54,7 +54,7 @@
     <div class="max-w-[95%] mx-auto mb-4 flex justify-between items-center border-b border-indigo-500/30 pb-3">
         <div>
             <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 tracking-tighter">
-                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V4.9_COLOR_MATRIX</span>
+                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V5.0_FINAL_LAYOUT</span>
             </h1>
             <p class="text-[10px] text-indigo-300/60">Mass Data Injection & Verification Protocol</p>
         </div>
@@ -214,6 +214,15 @@
             <div class="bg-slate-900/80 border border-indigo-500/20 p-6 rounded-xl overflow-x-auto">
                 <h4 class="text-xs font-bold text-slate-400 mb-4 uppercase">Keaktifan Input Data (1 Tahun Terakhir)</h4>
                 <div class="flex gap-1" id="contributionGraph"></div>
+                <div class="flex items-center gap-2 mt-4 text-[10px] text-slate-500 justify-end">
+                    <span>Less</span>
+                    <div class="w-3 h-3 rounded-sm bg-slate-800 border border-slate-700"></div>
+                    <div class="w-3 h-3 rounded-sm bg-indigo-900 border border-indigo-800"></div>
+                    <div class="w-3 h-3 rounded-sm bg-indigo-700 border border-indigo-600"></div>
+                    <div class="w-3 h-3 rounded-sm bg-indigo-500 border border-indigo-400"></div>
+                    <div class="w-3 h-3 rounded-sm bg-cyan-400 shadow-[0_0_5px_cyan]"></div>
+                    <span>More</span>
+                </div>
             </div>
         </div>
     </div>
@@ -283,11 +292,9 @@
             const tabNotes = document.getElementById('tabNotes');
             const tabPromos = document.getElementById('tabPromos');
 
-            // Reset Classes
             [tabBatch, tabNotes, tabPromos].forEach(t => t.className = "flex-1 py-2 px-1 text-[10px] uppercase font-bold transition-all tab-inactive whitespace-nowrap");
             [panelBatch, panelNotes, panelPromos].forEach(p => p.classList.add('hidden'));
 
-            // Activate Selected
             if(tabName === 'batch') {
                 panelBatch.classList.remove('hidden');
                 tabBatch.className = "flex-1 py-2 px-1 text-[10px] uppercase font-bold transition-all tab-active whitespace-nowrap";
@@ -305,7 +312,6 @@
         // --- WA TEMPLATE LOGIC (WITH COLOR ROTATION) ---
         function renderTemplateMatrix() {
             const matrix = document.getElementById('templateMatrix');
-            // Headers
             matrix.innerHTML = `
                 <div class="text-[9px] font-bold text-indigo-400 flex items-center justify-center bg-indigo-900/30 rounded p-1">CS NAME</div>
                 <div class="text-[9px] font-bold text-center bg-slate-800 rounded p-1">P1</div>
@@ -323,14 +329,13 @@
 
                 for(let i=0; i<5; i++) {
                     const btn = document.createElement('button');
-                    // Base classes + Default Color
                     const baseClass = "text-[10px] rounded p-1 transition-all template-btn flex items-center justify-center ";
                     const defaultColor = "bg-indigo-600/20 text-indigo-400 hover:bg-indigo-500 hover:text-white";
                     
                     btn.className = baseClass + defaultColor;
                     btn.innerHTML = "📋";
                     btn.title = `Copy Promo ${i+1}`;
-                    btn.setAttribute('data-state', 0); // 0=Default, 1=Green, 2=Amber, 3=Rose
+                    btn.setAttribute('data-state', 0); 
                     
                     btn.onclick = function() { copyTemplate(csIndex, i, this); };
                     matrix.appendChild(btn);
@@ -349,13 +354,12 @@
                 tabBtn.innerText = "COPIED! ✅";
                 setTimeout(() => tabBtn.innerText = oldText, 1000);
 
-                // --- COLOR ROTATION LOGIC ---
                 if(btnElement) {
                     const states = [
-                        "bg-indigo-600/20 text-indigo-400 hover:bg-indigo-500 hover:text-white", // 0: Default
-                        "bg-emerald-600 text-white hover:bg-emerald-500", // 1: Green
-                        "bg-amber-600 text-white hover:bg-amber-500", // 2: Amber
-                        "bg-rose-600 text-white hover:bg-rose-500" // 3: Rose
+                        "bg-indigo-600/20 text-indigo-400 hover:bg-indigo-500 hover:text-white", 
+                        "bg-emerald-600 text-white hover:bg-emerald-500", 
+                        "bg-amber-600 text-white hover:bg-amber-500", 
+                        "bg-rose-600 text-white hover:bg-rose-500" 
                     ];
                     const baseClass = "text-[10px] rounded p-1 transition-all template-btn flex items-center justify-center ";
 
@@ -462,7 +466,7 @@
         document.getElementById('bulkMaps').addEventListener('input', function() { document.getElementById('countMaps').innerText = this.value.split('\n').filter(l=>l.trim()!=='').length; });
         document.getElementById('clearBtn').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('mitraForm').reset(); });
 
-        // === COPY INTERCEPTOR ===
+        // === COPY INTERCEPTOR (HANYA WA) ===
         document.addEventListener('copy', function(e) {
             const selection = window.getSelection();
             if (selection.rangeCount === 0) return;
@@ -473,8 +477,9 @@
                     const nameCell = row.querySelector('.col-name');
                     const waCell = row.querySelector('.col-wa');
                     let lineParts = [];
-                    if (nameCell && selection.containsNode(nameCell, true)) lineParts.push(nameCell.innerText.trim().replace(/[\t\n\r]+/g, ' '));
+                    // Urutan: WA [Tab] Nama
                     if (waCell && selection.containsNode(waCell, true)) lineParts.push(waCell.innerText.trim().replace(/[\t\n\r]+/g, ''));
+                    if (nameCell && selection.containsNode(nameCell, true)) lineParts.push(nameCell.innerText.trim().replace(/[\t\n\r]+/g, ' '));
                     
                     if (lineParts.length > 0) { 
                         if(lineParts.length === 2 && selection.containsNode(waCell, true) && selection.containsNode(nameCell, true)) {
@@ -491,7 +496,7 @@
                 e.clipboardData.setData('text/plain', clipboardText); 
                 const btn = document.getElementById('totalDataCount');
                 const oldText = btn.innerText;
-                btn.innerText = `✅ Tersalin ${rowsCopied} Data!`;
+                btn.innerText = `✅ Tersalin ${rowsCopied} Baris!`;
                 setTimeout(() => btn.innerText = oldText, 2500);
             }
         });
@@ -543,7 +548,7 @@
         window.copyBatch = async (startIndex, count, check) => {
             const itemsToProcess = renderedItems.slice(startIndex, startIndex + count);
             if (itemsToProcess.length === 0) return;
-            const textToCopy = itemsToProcess.map(item => `${item.nama_usaha}\t${item.wa_display}`).join('\n');
+            const textToCopy = itemsToProcess.map(item => `${item.wa_display}\t${item.nama_usaha}`).join('\n');
             await navigator.clipboard.writeText(textToCopy);
             if (check) {
                 const updates = {};
@@ -552,7 +557,7 @@
             } else {
                 const btn = document.getElementById('totalDataCount');
                 const oldText = btn.innerText;
-                btn.innerText = `📋 Tersalin ${itemsToProcess.length} (Nama & WA)!`;
+                btn.innerText = `📋 Tersalin ${itemsToProcess.length} (WA & Nama)!`;
                 setTimeout(() => btn.innerText = oldText, 2000);
             }
         };
@@ -650,6 +655,7 @@
                     <td class="p-2 text-[10px] text-indigo-300 whitespace-nowrap no-select">${dateStr} (${timeStr})</td>
                     <td class="p-2 text-[10px] text-cyan-200 no-select max-w-[100px] truncate">${item.lokasi_wilayah||'-'}</td>
                     
+                    <!-- WA COLUMN (Actions: Edit, Invalid) -->
                     <td class="p-2 border-l border-indigo-500/10 pl-3 relative cell-container group/wa">
                         <span class="selectable col-wa ${waClass} font-mono text-[10px] block">${item.wa_display}</span>
                         <div class="hover-actions absolute right-0 top-1/2 -translate-y-1/2 flex gap-1 z-10 bg-slate-900/90 p-1 rounded-lg border border-indigo-500/50 shadow-lg">
@@ -658,10 +664,11 @@
                         </div>
                     </td>
 
+                    <!-- NAME COLUMN (Actions: Copy 10, Copy&Check 10, Edit) -->
                     <td class="p-2 selectable col-name text-white font-bold text-[11px] border-r border-indigo-500/10 pr-3 relative cell-container group/name">
                         ${item.nama_usaha}
                         <div class="hover-actions absolute right-0 top-1/2 -translate-y-1/2 flex gap-1 z-10 bg-slate-900/90 p-1 rounded-lg border border-indigo-500/50 shadow-lg">
-                            <button onclick="copyBatch(${index}, 10, false)" class="w-6 h-6 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[9px] font-bold" title="Copy 10 (Nama+WA)">📋</button>
+                            <button onclick="copyBatch(${index}, 10, false)" class="w-6 h-6 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[9px] font-bold" title="Copy 10 (WA+Nama)">📋</button>
                             <button onclick="copyBatch(${index}, 10, true)" class="w-6 h-6 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[9px] font-bold" title="Copy & Cek 10">✅</button>
                             <button onclick="openEditModal('${itemId}')" class="w-6 h-6 flex items-center justify-center bg-yellow-600 hover:bg-yellow-500 text-white rounded text-[9px] font-bold" title="Edit Data">✏️</button>
                         </div>
