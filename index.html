@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mitra Database System v4.6</title>
+    <title>Mitra Database System v4.8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -23,11 +23,15 @@
         .selectable { user-select: text; cursor: text; }
         ::selection { background: rgba(99, 102, 241, 0.5); color: white; }
         input[type="checkbox"] { accent-color: #4f46e5; cursor: pointer; width: 14px; height: 14px; }
-        .tab-active { border-bottom: 2px solid #6366f1; color: white; }
+        .tab-active { border-bottom: 2px solid #6366f1; color: white; background: rgba(99, 102, 241, 0.1); }
         .tab-inactive { color: #94a3b8; border-bottom: 2px solid transparent; }
         .cell-container .hover-actions { display: none; }
         .cell-container:hover .hover-actions { display: flex; }
         .contrib-cell:hover::after { content: attr(data-title); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap; z-index: 10; border: 1px solid #4f46e5; pointer-events: none; }
+        
+        /* Grid Template Style */
+        .template-grid { display: grid; grid-template-columns: 80px repeat(5, 1fr); gap: 4px; }
+        .template-btn:hover { transform: scale(1.05); box-shadow: 0 0 10px rgba(99, 102, 241, 0.5); }
     </style>
 </head>
 <body class="bg-[conic-gradient(at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-indigo-950 to-slate-900 text-indigo-100 min-h-screen p-4 md:p-8">
@@ -48,7 +52,7 @@
     <div class="max-w-[95%] mx-auto mb-4 flex justify-between items-center border-b border-indigo-500/30 pb-3">
         <div>
             <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 tracking-tighter">
-                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V4.6_WIDER_VIEW</span>
+                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V4.8_TEMPLATES</span>
             </h1>
             <p class="text-[10px] text-indigo-300/60">Mass Data Injection & Verification Protocol</p>
         </div>
@@ -105,11 +109,14 @@
             </div>
 
             <!-- RIGHT PANEL: TABS -->
-            <div class="lg:col-span-1 glass p-5 rounded-xl border border-indigo-500/20 flex flex-col h-full min-h-[450px]">
-                <div class="flex border-b border-indigo-500/30 mb-4">
-                    <button onclick="switchTab('notes')" id="tabNotes" class="flex-1 py-2 text-[10px] uppercase font-bold transition-all tab-active">DAILY NOTES</button>
-                    <button onclick="switchTab('batch')" id="tabBatch" class="flex-1 py-2 text-[10px] uppercase font-bold transition-all tab-inactive">BATCH HISTORY</button>
+            <div class="lg:col-span-1 glass p-5 rounded-xl border border-indigo-500/20 flex flex-col h-full min-h-[500px]">
+                <div class="flex border-b border-indigo-500/30 mb-4 overflow-x-auto">
+                    <button onclick="switchTab('notes')" id="tabNotes" class="flex-1 py-2 px-1 text-[10px] uppercase font-bold transition-all tab-active whitespace-nowrap">DAILY NOTES</button>
+                    <button onclick="switchTab('promos')" id="tabPromos" class="flex-1 py-2 px-1 text-[10px] uppercase font-bold transition-all tab-inactive whitespace-nowrap">WA PROMOS</button>
+                    <button onclick="switchTab('batch')" id="tabBatch" class="flex-1 py-2 px-1 text-[10px] uppercase font-bold transition-all tab-inactive whitespace-nowrap">BATCH HISTORY</button>
                 </div>
+                
+                <!-- Content 1: Daily Notes -->
                 <div id="panelNotes" class="flex-1 flex flex-col overflow-hidden">
                     <form id="noteForm" class="mb-3 flex gap-2">
                         <input type="text" id="noteInput" required placeholder="Tulis catatan harian..." class="flex-1 bg-slate-900 border border-indigo-500/30 rounded p-2 text-xs text-white focus:border-cyan-400 outline-none">
@@ -117,6 +124,26 @@
                     </form>
                     <div id="notesList" class="flex-grow overflow-y-auto pr-1 space-y-2"><p class="text-[10px] text-slate-500 italic text-center mt-10">Memuat catatan...</p></div>
                 </div>
+
+                <!-- Content 2: WA Promos Matrix (NEW) -->
+                <div id="panelPromos" class="hidden flex-1 flex flex-col overflow-hidden">
+                    <div class="text-[9px] text-slate-400 mb-2 text-center">Klik tombol untuk copy template sesuai CS</div>
+                    <div class="flex-grow overflow-y-auto pr-1">
+                        <div class="template-grid" id="templateMatrix">
+                            <!-- Headers -->
+                            <div class="text-[9px] font-bold text-indigo-400 flex items-center justify-center bg-indigo-900/30 rounded p-1">CS NAME</div>
+                            <div class="text-[9px] font-bold text-center bg-slate-800 rounded p-1">P1</div>
+                            <div class="text-[9px] font-bold text-center bg-slate-800 rounded p-1">P2</div>
+                            <div class="text-[9px] font-bold text-center bg-slate-800 rounded p-1">P3</div>
+                            <div class="text-[9px] font-bold text-center bg-slate-800 rounded p-1">P4</div>
+                            <div class="text-[9px] font-bold text-center bg-slate-800 rounded p-1">P5</div>
+                            
+                            <!-- Matrix akan di-generate via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content 3: Batch List -->
                 <div id="panelBatch" class="hidden flex-1 flex flex-col overflow-hidden">
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-[9px] text-indigo-400 uppercase">Input History</span>
@@ -161,9 +188,7 @@
                                 <th class="p-2 font-bold text-center w-12 no-select">Sts</th>
                                 <th class="p-2 font-bold whitespace-nowrap no-select">Waktu</th>
                                 <th class="p-2 font-bold no-select">Lokasi</th>
-                                <!-- KOLOM WA (KIRI) -->
                                 <th class="p-2 font-bold selectable text-indigo-300 border-l border-indigo-500/10">Kontak (WA)</th>
-                                <!-- KOLOM NAMA (KANAN) -->
                                 <th class="p-2 font-bold selectable text-indigo-300 border-r border-indigo-500/10">Nama Usaha</th>
                                 <th class="p-2 font-bold text-center w-32 no-select">Aksi</th>
                             </tr>
@@ -180,7 +205,7 @@
         </div>
     </div>
 
-    <!-- MODAL CONTRIBUTION PROGRESS -->
+    <!-- MODAL CONTRIBUTION -->
     <div id="progressModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
         <div class="glass p-8 rounded-2xl w-full max-w-5xl modal-enter border border-indigo-500/40 shadow-[0_0_100px_rgba(79,70,229,0.2)]">
             <div class="flex justify-between items-center mb-6">
@@ -195,15 +220,6 @@
             <div class="bg-slate-900/80 border border-indigo-500/20 p-6 rounded-xl overflow-x-auto">
                 <h4 class="text-xs font-bold text-slate-400 mb-4 uppercase">Keaktifan Input Data (1 Tahun Terakhir)</h4>
                 <div class="flex gap-1" id="contributionGraph"></div>
-                <div class="flex items-center gap-2 mt-4 text-[10px] text-slate-500 justify-end">
-                    <span>Less</span>
-                    <div class="w-3 h-3 rounded-sm bg-slate-800 border border-slate-700"></div>
-                    <div class="w-3 h-3 rounded-sm bg-indigo-900 border border-indigo-800"></div>
-                    <div class="w-3 h-3 rounded-sm bg-indigo-700 border border-indigo-600"></div>
-                    <div class="w-3 h-3 rounded-sm bg-indigo-500 border border-indigo-400"></div>
-                    <div class="w-3 h-3 rounded-sm bg-cyan-400 shadow-[0_0_5px_cyan]"></div>
-                    <span>More</span>
-                </div>
             </div>
         </div>
     </div>
@@ -245,6 +261,20 @@
         let lastCheckedIndex = null;
         let allDataCache = []; 
 
+        // --- TEMPLATES DATA ---
+        const csList = ["Amanda", "Balqis", "Cintia", "Diana", "Elita", "Fira", "Gina"];
+        const promoTemplates = [
+            `Baik kak, sebelumnya saya izin memperkenalkan diri, saya Amanda dari https://undanganweb.net/ vendor spesialis undangan digital website.\n\nKami mendapat kontak Kakak dari Google Maps dan ingin menawarkan menjadi Mitra/Reseller Undangan Digital *tanpa biaya pendaftaran (Gratis)*.\n\nKenapa bergabung dengan kami?\n* Tanpa Modal: Kakak tidak perlu bayar apapun di awal.\n* Sistem "Terima Beres": Semua proses desain dan pengerjaan dilakukan oleh tim kami.\n* Harga Kompetitif: Harga mulai dari Rp39rb, Kakak bebas menentukan harga jual sendiri ke konsumen.\n* Sistem Bayar Belakangan: Pembayaran ke kami dilakukan setelah undangan selesai dikerjakan dan siap dikirim.\n\nDengan sistem ini, Kakak bisa menambah variasi layanan usaha Kakak tanpa repot. Jika Kakak tertarik atau ingin tanya-tanya dulu soal katalognya, silakan balas pesan ini ya, Kak. Kami akan senang sekali bisa berdiskusi. 😊🙏`,
+            
+            `Baik kak, sebelumnya saya iaya izin memperkenalkan diri, nama saya Amanda dari https://undanganweb.net/ yang merupakan vendor spesialis undangan digital website.\n\nKami mendapatkan kontak kakak dari google maps dan ingin mengajak kakak menjadi mitra/reseller untuk undangan digital/web jika kakak berkenan.\n\nUntuk menjadi mitra/reseller *kakak tidak perlu membayar biaya apapun alias gratis*. Harga undangan digital dari kami mulai dari 39rb dan kakak bisa menjual dengan harga berapapun ke costumer kakak.\n\nKami menyediakan berbagai jenis undangan digital, undangan pernikahan, undangan khitan, aqiqah, ulang tahun, wisuda, dll.\n\nUntuk sistemnya, bisa bayar setelah undangan selesai kami kerjakan. Jadi misalnya ketika ada costumer kakak yang mau membuat undangan digital, lalu undangannya kami kerjakan, setelah undangan selesai kami kerjakan, akan kami infokan kepada kakak dan kakak mengirim link undangan tadi ke costumer kakak membayar kepada kakak, dan terakhir kakak membayar kami. Jadi semua proses pengerjaan dilakukan oleh kami, kakak hanya menjadi perantara dan tinggal terima bersih saja.\n\nJika kakak berkenan, masih bingung dan ingin bertanya lagi silahkan ditanyakan saja ya kak, kami akan membalas dengan senang hati ☺️🙏`,
+            
+            `Baik kak, sebelumnya saya izin memperkenalkan diri, saya Amanda dari https://undanganweb.net/ – vendor spesialis undangan digital berbasis website.\nKami dapat kontak Kakak dari Google Maps dan ingin mengajak Kakak menjadi mitra/reseller undangan digital kami, jika Kakak berkenan tentunya.\n\nKeuntungan menjadi mitra kami:\n1. Gratis total – tidak ada biaya pendaftaran, bulanan, atau apapun.\n2. Harga dasar undangan dari kami mulai Rp39.000 saja, Kakak bebas tentukan harga jual ke pelanggan (margin untung sepenuhnya milik Kakak).\n3. Kami sediakan beragam tema undangan digital: pernikahan, khitanan, aqiqah, ulang tahun, wisuda, syukuran, dan lain-lain.\n4. Sistem bayar belakangan (pay after done):\n- Pelanggan Kakak pesan → Kakak forward order ke kami.\n- Kami kerjakan full (desain, edit, revisi, hosting) sampai jadi.\n- Setelah selesai, kami kirim link undangan ke Kakak.\n- Kakak kirim link ke pelanggan → pelanggan bayar ke Kakak.\n- Terakhir, Kakak transfer ke kami (harga dasar saja).\n\nJadi Kakak hanya perlu menawarkan ke pelanggan kakak dan terima pembayaran – semua teknis & produksi kami tangani. Praktis, minim risiko, dan Kakak tinggal nikmati keuntungan bersihnya.\nJika Kakak tertarik atau masih ada yang ingin ditanyakan (misal contoh undangan, cara order, atau detail lain), silakan balas saja ya Kak. Kami siap jelaskan dengan senang hati. 😊🙏\n\nSalam hangat,\nAmanda`,
+            
+            `Baik kak, sebelumnya saya izin memperkenalkan diri ya kak, saya Amanda dari https://undanganweb.net/ – penyedia layanan undangan digital website.\nKami mendapat kontak Kakak dari Google Maps dan ingin mengundang Kakak untuk jadi mitra/reseller kami.\n\nAdapun keuntungan menjadi mitra/reseller kami yaitu:\n- Tanpa modal awal sama sekali (gratis bergabung).\n- Harga dasar dari kami mulai dari Rp39.000 – Kakak bisa tentukan sendiri harga jual ke pelanggan.\n- Koleksi tema lengkap: pernikahan, syukuran, aqiqah, khitanan, wisuda, ulang tahun, dll.\n- Semua pekerjaan kami yang lakukan – Kakak tinggal terima bersih saja\n\nProsesnya mudah dan minim risiko:\nPelanggan Kakak pesan → kami handle desain, revisi, hingga hosting → setelah jadi, Kakak kirim link & terima pembayaran → Kakak bayar kami harga dasar saja. Semua teknis kami kerjakan, Kakak fokus jualan.\n\nJika Kakak berminat atau butuh penjelasan lebih lanjut, silakan tanya langsung ya. Kami senang membantu! 🙏`,
+            
+            `Baik kak, sebelumnya salam kenal, saya Amanda dari https://undanganweb.net/ yang merupakan penyedia jasa undangan digital berbasis website.\n\nKami menemukan kontak Kakak dari Google Maps dan bermaksud menawarkan peluang menjadi Mitra/Reseller Undangan Digital kami secara gratis (tanpa biaya apapun).\n\nBeberapa keuntungan menjadi mitra kami:\n- Tanpa Modal: Tidak ada biaya pendaftaran yang perlu Kakak siapkan.\n- Full Support: Tim kami yang menangani seluruh proses input data dan desain hingga link siap digunakan.\n- Harga Grosir: Tarif dari kami mulai Rp39.000, kakak bisa menaikkan harga jual ke konsumen sesuai yang kakak mau\n- Keamanan Transaksi: Kakak cukup membayar kepada kami setelah undangan selesai kami kerjakan dan direvisi\n\nLayanan ini sangat cocok untuk menambah katalog produk Kakak tanpa harus menambah beban kerja teknis. Apabila Kakak ingin melihat katalog desain atau menanyakan sistemnya lebih rinci, silakan langsung balas pesan ini ya.\n\nTerima kasih dan semoga sukses selalu untuk usahanya! 😊🙏`
+        ];
+
         // --- UTILITIES ---
         function sanitizePhoneNumber(phone) { if(!phone) return ""; return phone.replace(/\D/g, ''); }
         function getTodayDate() { return new Date().toISOString().split('T')[0]; }
@@ -254,21 +284,69 @@
         window.switchTab = (tabName) => {
             const panelBatch = document.getElementById('panelBatch');
             const panelNotes = document.getElementById('panelNotes');
+            const panelPromos = document.getElementById('panelPromos');
             const tabBatch = document.getElementById('tabBatch');
             const tabNotes = document.getElementById('tabNotes');
+            const tabPromos = document.getElementById('tabPromos');
 
+            // Reset Classes
+            [tabBatch, tabNotes, tabPromos].forEach(t => t.className = "flex-1 py-2 px-1 text-[10px] uppercase font-bold transition-all tab-inactive whitespace-nowrap");
+            [panelBatch, panelNotes, panelPromos].forEach(p => p.classList.add('hidden'));
+
+            // Activate Selected
             if(tabName === 'batch') {
                 panelBatch.classList.remove('hidden');
-                panelNotes.classList.add('hidden');
-                tabBatch.className = "flex-1 py-2 text-[10px] uppercase font-bold transition-all tab-active";
-                tabNotes.className = "flex-1 py-2 text-[10px] uppercase font-bold transition-all tab-inactive";
-            } else {
-                panelBatch.classList.add('hidden');
+                tabBatch.className = "flex-1 py-2 px-1 text-[10px] uppercase font-bold transition-all tab-active whitespace-nowrap";
+            } else if(tabName === 'notes') {
                 panelNotes.classList.remove('hidden');
-                tabBatch.className = "flex-1 py-2 text-[10px] uppercase font-bold transition-all tab-inactive";
-                tabNotes.className = "flex-1 py-2 text-[10px] uppercase font-bold transition-all tab-active";
+                tabNotes.className = "flex-1 py-2 px-1 text-[10px] uppercase font-bold transition-all tab-active whitespace-nowrap";
                 loadNotes();
+            } else if(tabName === 'promos') {
+                panelPromos.classList.remove('hidden');
+                tabPromos.className = "flex-1 py-2 px-1 text-[10px] uppercase font-bold transition-all tab-active whitespace-nowrap";
+                renderTemplateMatrix();
             }
+        };
+
+        // --- WA TEMPLATE LOGIC ---
+        function renderTemplateMatrix() {
+            const matrix = document.getElementById('templateMatrix');
+            // Keep header, clear buttons
+            while(matrix.children.length > 7) { matrix.removeChild(matrix.lastChild); }
+            
+            csList.forEach((csName, csIndex) => {
+                // Row Label
+                const label = document.createElement('div');
+                label.className = "text-[9px] font-bold text-slate-300 bg-slate-800/50 p-1 flex items-center justify-start pl-2 rounded";
+                label.innerText = csName;
+                matrix.appendChild(label);
+
+                // Grid Buttons
+                for(let i=0; i<5; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = "bg-indigo-600/20 hover:bg-indigo-500 hover:text-white text-indigo-400 text-[10px] rounded p-1 transition-all template-btn flex items-center justify-center";
+                    btn.innerHTML = "📋";
+                    btn.title = `Copy Promo ${i+1} for ${csName}`;
+                    btn.onclick = () => copyTemplate(csIndex, i);
+                    matrix.appendChild(btn);
+                }
+            });
+        }
+
+        window.copyTemplate = (csIndex, promoIndex) => {
+            const csName = csList[csIndex];
+            let text = promoTemplates[promoIndex];
+            // Replace "Amanda" globally with the selected CS Name
+            // If the CS is Amanda, this effectively does nothing, which is fine
+            text = text.replace(/Amanda/g, csName);
+            
+            navigator.clipboard.writeText(text).then(() => {
+                // Simple Toast Feedback logic or Alert
+                const btn = document.getElementById('tabPromos');
+                const oldText = btn.innerText;
+                btn.innerText = "COPIED! ✅";
+                setTimeout(() => btn.innerText = oldText, 1000);
+            });
         };
 
         // --- NOTES LOGIC ---
@@ -302,7 +380,7 @@
             } catch(e) {}
         }
 
-        // --- PROGRESS GRAPH ---
+        // --- PROGRESS & CONTRIBUTION GRAPH ---
         window.openProgressModal = async () => {
             document.getElementById('progressModal').classList.remove('hidden');
             const today = new Date();
@@ -355,8 +433,6 @@
         }
 
         window.applyDateFilter = () => loadData();
-        
-        // --- RESET FILTER TO 30 DAYS (FIX) ---
         window.resetTo30Days = () => {
             document.getElementById('filterStartDate').value = '';
             document.getElementById('filterEndDate').value = '';
@@ -378,7 +454,6 @@
                     const nameCell = row.querySelector('.col-name');
                     const waCell = row.querySelector('.col-wa');
                     let lineParts = [];
-                    // Urutan: Nama [Tab] WA (Untuk Excel A=Nama, B=WA)
                     if (nameCell && selection.containsNode(nameCell, true)) lineParts.push(nameCell.innerText.trim().replace(/[\t\n\r]+/g, ' '));
                     if (waCell && selection.containsNode(waCell, true)) lineParts.push(waCell.innerText.trim().replace(/[\t\n\r]+/g, ''));
                     
@@ -668,29 +743,82 @@
 
                     if(filtered.length === 0) { tableBody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-500">Tidak ada data.</td></tr>`; return; }
                     
-                    const batches = {};
+                    const batchesMap = {};
+                    const batchOrder = [];
+
+                    // Grouping Logic
+                    filtered.forEach(item => {
+                        const bId = item.batch_id || 'manual_legacy';
+                        if (!batchesMap[bId]) {
+                            batchesMap[bId] = [];
+                            batchOrder.push(bId);
+                        }
+                        batchesMap[bId].push(item);
+                    });
+
                     let count = 0;
                     tableBody.innerHTML = '';
 
-                    filtered.forEach(item => {
-                        count++;
-                        renderedItems.push(item);
-                        renderedItems[count-1].id = sanitizePhoneNumber(item.wa_display);
+                    // Iterate Groups based on sorted order (filtered is already sorted by time)
+                    batchOrder.forEach(batchId => {
+                        const items = batchesMap[batchId];
                         
-                        if(item.batch_id) {
-                            if(!batches[item.batch_id]) batches[item.batch_id] = {count:0, time: item.timestamp};
-                            batches[item.batch_id].count++;
+                        // Header Sesi (Untuk memisahkan batch)
+                        if (batchId !== 'manual_legacy') {
+                            const dateObj = new Date(parseInt(batchId));
+                            const dateStr = dateObj.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+                            const timeStr = dateObj.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+                            
+                            // Inject Header
+                            tableBody.insertAdjacentHTML('beforeend', `
+                                <tr class="bg-indigo-900/40 border-y border-indigo-500/30">
+                                    <td colspan="8" class="p-3 text-left">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xs font-bold text-indigo-300 uppercase tracking-wider">⚡ SESI INPUT: ${dateStr} (${timeStr})</span>
+                                            <span class="bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-indigo-400">${items.length} DATA</span>
+                                            
+                                            <button onclick="deleteBatch('${batchId}', ${items.length})" class="ml-auto text-[10px] text-red-400 hover:text-red-200 flex items-center gap-1 border border-red-500/30 px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/30 transition-all">
+                                                🗑 HAPUS SESI INI
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `);
+                        } else {
+                             // Header untuk data lama/manual
+                             tableBody.insertAdjacentHTML('beforeend', `
+                                <tr class="bg-slate-800/50 border-y border-slate-700">
+                                    <td colspan="8" class="p-2 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                        DATA LAMA / MANUAL (TANPA SESI) - ${items.length} DATA
+                                    </td>
+                                </tr>
+                            `);
                         }
+
+                        // Render Rows in Batch
+                        items.forEach(item => {
+                            count++;
+                            const index = renderedItems.length;
+                            renderedItems.push(item);
+                            renderedItems[index].id = sanitizePhoneNumber(item.wa_display);
+                            
+                            tableBody.insertAdjacentHTML('beforeend', generateRowHtml(item, count, index));
+                        });
                         
-                        tableBody.insertAdjacentHTML('beforeend', generateRowHtml(item, count, count - 1));
+                        // Spacer Row
+                        tableBody.insertAdjacentHTML('beforeend', `<tr class="h-6 border-none bg-transparent"><td colspan="8"></td></tr>`);
                     });
 
-                    const batchKeys = Object.keys(batches).sort((a,b)=>b-a);
+                    // Update sidebar (still useful)
+                    const batchKeys = Object.keys(batchesMap);
                     if(batchKeys.length) {
                         batchKeys.forEach(bid => {
-                            const b = batches[bid];
-                            const d = new Date(b.time);
-                            batchList.insertAdjacentHTML('beforeend', `<div class="bg-indigo-900/40 border border-indigo-500/30 p-2 rounded mb-2 flex justify-between items-center group"><div class="text-[10px] text-indigo-300 font-mono">${d.toLocaleDateString()} | ${d.toLocaleTimeString()} <br> <span class="text-white font-bold">${b.count} DATA</span></div><button onclick="deleteBatch('${bid}', ${b.count})" class="text-[9px] bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white px-2 py-1 rounded">HAPUS</button></div>`);
+                            if(bid === 'manual_legacy') return;
+                            const bItems = batchesMap[bid];
+                            const d = new Date(parseInt(bid));
+                            const dateStr = d.toLocaleDateString('id-ID', {day:'numeric', month:'short'});
+                            const timeStr = d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+                            batchList.insertAdjacentHTML('beforeend', `<div class="bg-indigo-900/40 border border-indigo-500/30 p-2 rounded mb-2 flex justify-between items-center group"><div class="text-[10px] text-indigo-300 font-mono">${dateStr} | ${timeStr} <br> <span class="text-white font-bold">${bItems.length} DATA</span></div><button onclick="deleteBatch('${bid}', ${bItems.length})" class="text-[9px] bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white px-2 py-1 rounded">HAPUS</button></div>`);
                         });
                     } else batchList.innerHTML = `<p class="text-[10px] text-slate-500 text-center mt-4">Tidak ada batch.</p>`;
 
