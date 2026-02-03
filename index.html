@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mitra Database System v4.5</title>
+    <title>Mitra Database System v4.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -48,7 +48,7 @@
     <div class="max-w-[95%] mx-auto mb-4 flex justify-between items-center border-b border-indigo-500/30 pb-3">
         <div>
             <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 tracking-tighter">
-                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V4.5_FIXED</span>
+                >> MITRA_DB_SYS <span class="text-[10px] align-middle text-emerald-400 border border-emerald-500 px-1 rounded ml-2">V4.6_WIDER_VIEW</span>
             </h1>
             <p class="text-[10px] text-indigo-300/60">Mass Data Injection & Verification Protocol</p>
         </div>
@@ -133,7 +133,7 @@
                 <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-4 gap-4">
                     <div>
                         <h2 class="text-sm font-bold text-white tracking-wide">DATABASE MONITOR</h2>
-                        <p class="text-[10px] text-indigo-300/60" id="viewModeText">Menampilkan data 3 hari terakhir</p>
+                        <p class="text-[10px] text-indigo-300/60" id="viewModeText">Menampilkan data 30 hari terakhir</p>
                     </div>
                     <div class="flex flex-col items-end gap-2">
                         <div class="relative group w-full md:w-64">
@@ -147,7 +147,7 @@
                             <span class="text-slate-500 text-xs">-</span>
                             <input type="date" id="filterEndDate" class="bg-slate-800 border border-indigo-500/30 rounded p-1 text-xs text-white focus:outline-none focus:border-cyan-500 shadow-inner w-28">
                             <button onclick="applyDateFilter()" class="text-[10px] bg-indigo-600 px-3 py-1 rounded hover:bg-indigo-500 text-white transition-colors shadow-lg">Cari</button>
-                            <button onclick="resetTo3Days()" class="text-[10px] bg-slate-700 px-3 py-1 rounded hover:bg-slate-600 text-white transition-colors ml-1">Reset</button>
+                            <button onclick="resetTo30Days()" class="text-[10px] bg-slate-700 px-3 py-1 rounded hover:bg-slate-600 text-white transition-colors ml-1">Reset</button>
                         </div>
                     </div>
                 </div>
@@ -161,7 +161,9 @@
                                 <th class="p-2 font-bold text-center w-12 no-select">Sts</th>
                                 <th class="p-2 font-bold whitespace-nowrap no-select">Waktu</th>
                                 <th class="p-2 font-bold no-select">Lokasi</th>
+                                <!-- KOLOM WA (KIRI) -->
                                 <th class="p-2 font-bold selectable text-indigo-300 border-l border-indigo-500/10">Kontak (WA)</th>
+                                <!-- KOLOM NAMA (KANAN) -->
                                 <th class="p-2 font-bold selectable text-indigo-300 border-r border-indigo-500/10">Nama Usaha</th>
                                 <th class="p-2 font-bold text-center w-32 no-select">Aksi</th>
                             </tr>
@@ -353,13 +355,19 @@
         }
 
         window.applyDateFilter = () => loadData();
-        window.resetTo3Days = () => { document.getElementById('filterStartDate').value = ''; document.getElementById('filterEndDate').value = ''; loadData(); };
+        
+        // --- RESET FILTER TO 30 DAYS (FIX) ---
+        window.resetTo30Days = () => {
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            loadData();
+        };
 
         document.getElementById('smartRawData').addEventListener('input', function() { document.getElementById('countRaw').innerText = this.value.split('\n').filter(l=>l.trim()!=='').length; });
         document.getElementById('bulkMaps').addEventListener('input', function() { document.getElementById('countMaps').innerText = this.value.split('\n').filter(l=>l.trim()!=='').length; });
         document.getElementById('clearBtn').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('mitraForm').reset(); });
 
-        // --- COPY INTERCEPTOR ---
+        // === COPY INTERCEPTOR ===
         document.addEventListener('copy', function(e) {
             const selection = window.getSelection();
             if (selection.rangeCount === 0) return;
@@ -375,7 +383,6 @@
                     if (waCell && selection.containsNode(waCell, true)) lineParts.push(waCell.innerText.trim().replace(/[\t\n\r]+/g, ''));
                     
                     if (lineParts.length > 0) { 
-                        // Jika blok baris full, paksa urutan Nama -> WA (meski di UI WA -> Nama)
                         if(lineParts.length === 2 && selection.containsNode(waCell, true) && selection.containsNode(nameCell, true)) {
                              clipboardText += `${lineParts[0]}\t${lineParts[1]}\n`; 
                         } else {
@@ -461,7 +468,7 @@
         window.searchData = async () => {
             const input = document.getElementById('globalSearch');
             const term = input.value.trim().toLowerCase(); 
-            if(!term) { resetTo3Days(); return; }
+            if(!term) { resetTo30Days(); return; }
 
             const tableBody = document.getElementById('tableBody');
             document.getElementById('viewModeText').innerText = `Mencari: ${term}...`;
@@ -506,7 +513,6 @@
                     if (snapshot.exists()) {
                         const updates = {};
                         snapshot.forEach((child) => { 
-                            // Pastikan konversi ke String agar aman
                             if (String(child.val().batch_id) === String(batchId)) {
                                 updates[child.key] = null;
                             }
@@ -536,7 +542,6 @@
             const itemId = sanitizePhoneNumber(item.wa_display);
             const waClass = isInvalid ? 'wa-invalid' : 'text-emerald-400';
             
-            // Fix Maps Button (Disable if empty, prepend https if missing)
             let mapUrl = item.maps ? item.maps.trim() : '';
             if (mapUrl && !mapUrl.startsWith('http')) mapUrl = 'https://' + mapUrl;
             const mapBtn = mapUrl 
@@ -622,11 +627,77 @@
             document.getElementById('mitraForm').reset();
             document.getElementById('countRaw').innerText = '0';
             
-            // ALERT REPORT
             alert(`✅ PROSES SELESAI!\n\n📥 Sukses Masuk: ${successCount}\n⚠️ Gagal/Duplikat: ${skipCount}\n\nNomor Duplikat:\n${duplicates.slice(0, 10).join('\n')}${duplicates.length > 10 ? '\n...dan lainnya' : ''}`);
             
             loadData();
         });
+
+        // --- LOAD DATA (DEFAULT 30 DAYS) ---
+        window.loadData = async function() {
+            const tableBody = document.getElementById('tableBody');
+            const startF = document.getElementById('filterStartDate').value;
+            const endF = document.getElementById('filterEndDate').value;
+            const viewTxt = document.getElementById('viewModeText');
+            const batchList = document.getElementById('batchListContainer');
+            
+            tableBody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-indigo-400 animate-pulse">Scanning...</td></tr>`;
+
+            try {
+                const snapshot = await get(ref(db, 'mitra'));
+                allDataCache = []; 
+                renderedItems = []; selectedIds.clear(); updateActionBar(); batchList.innerHTML = '';
+
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    allDataCache = Object.values(data); 
+                    
+                    // SORTING FIX: Terbaru di atas (descending by timestamp)
+                    let filtered = allDataCache.sort((a,b) => b.timestamp - a.timestamp);
+                    
+                    // DEFAULT 30 HARI (BUKAN 3 HARI)
+                    const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate()-30); thirtyDaysAgo.setHours(0,0,0,0);
+
+                    if (startF && endF) {
+                        viewTxt.innerText = `Data: ${startF} s/d ${endF}`;
+                        const sDate = new Date(startF); const eDate = new Date(endF); eDate.setHours(23,59,59);
+                        filtered = filtered.filter(i => { const d = new Date(i.timestamp); return d >= sDate && d <= eDate; });
+                    } else {
+                        viewTxt.innerText = `Data 30 Hari Terakhir (Default)`;
+                        filtered = filtered.filter(i => new Date(i.timestamp) >= thirtyDaysAgo);
+                    }
+
+                    if(filtered.length === 0) { tableBody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-500">Tidak ada data.</td></tr>`; return; }
+                    
+                    const batches = {};
+                    let count = 0;
+                    tableBody.innerHTML = '';
+
+                    filtered.forEach(item => {
+                        count++;
+                        renderedItems.push(item);
+                        renderedItems[count-1].id = sanitizePhoneNumber(item.wa_display);
+                        
+                        if(item.batch_id) {
+                            if(!batches[item.batch_id]) batches[item.batch_id] = {count:0, time: item.timestamp};
+                            batches[item.batch_id].count++;
+                        }
+                        
+                        tableBody.insertAdjacentHTML('beforeend', generateRowHtml(item, count, count - 1));
+                    });
+
+                    const batchKeys = Object.keys(batches).sort((a,b)=>b-a);
+                    if(batchKeys.length) {
+                        batchKeys.forEach(bid => {
+                            const b = batches[bid];
+                            const d = new Date(b.time);
+                            batchList.insertAdjacentHTML('beforeend', `<div class="bg-indigo-900/40 border border-indigo-500/30 p-2 rounded mb-2 flex justify-between items-center group"><div class="text-[10px] text-indigo-300 font-mono">${d.toLocaleDateString()} | ${d.toLocaleTimeString()} <br> <span class="text-white font-bold">${b.count} DATA</span></div><button onclick="deleteBatch('${bid}', ${b.count})" class="text-[9px] bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white px-2 py-1 rounded">HAPUS</button></div>`);
+                        });
+                    } else batchList.innerHTML = `<p class="text-[10px] text-slate-500 text-center mt-4">Tidak ada batch.</p>`;
+
+                    document.getElementById('totalDataCount').innerText = `Total: ${count}`;
+                } else { tableBody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-500">Database kosong.</td></tr>`; }
+            } catch(e) { console.error(e); }
+        }
 
         // Init
         loadNotes();
